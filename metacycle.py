@@ -134,26 +134,26 @@ class Metacycle:
                     except:
                         R2, R2_adj = np.nan, np.nan
                     #TODO append change
-                    df_results_row = pd.DataFrame({'test': test, 
-                                                'period': per,
-                                                'n_components': n_comps,
-                                                'p': statistics['p'], 
-                                                'p_reject': statistics['p_reject'],
-                                                'RSS': statistics['RSS'],
-                                                'R2': R2, 
-                                                'R2_adj': R2_adj,
-                                                'ME': statistics['ME'],
-                                                'resid_SE': statistics['resid_SE'],
-                                                'log-likelihood': results.llf,        
-                                                'amplitude': rhythm_param['amplitude'],
-                                                'acrophase': rhythm_param['acrophase'],
-                                                'mesor': rhythm_param['mesor'],
-                                                'peaks': rhythm_param['peaks'],
-                                                'heights': rhythm_param['heights'],
-                                                'troughs': rhythm_param['troughs'],
-                                                'heights2': rhythm_param['heights2']
-                                                })
-                    df_results = pd.concat([df_results,df_results_row])
+                    df_results = df_results.append({'test': test, 
+                                            'period': per,
+                                            'n_components': n_comps,
+                                            'p': statistics['p'], 
+                                            'p_reject': statistics['p_reject'],
+                                            'RSS': statistics['RSS'],
+                                            'R2': R2, 
+                                            'R2_adj': R2_adj,
+                                            'ME': statistics['ME'],
+                                            'resid_SE': statistics['resid_SE'],
+                                            'log-likelihood': results.llf,        
+                                            'amplitude': rhythm_param['amplitude'],
+                                            'acrophase': rhythm_param['acrophase'],
+                                            'mesor': rhythm_param['mesor'],
+                                            'peaks': rhythm_param['peaks'],
+                                            'heights': rhythm_param['heights'],
+                                            'troughs': rhythm_param['troughs'],
+                                            'heights2': rhythm_param['heights2']
+                                            
+                                            }, ignore_index=True)
                     if n_comps == 0:
                         break        
         df_results.q = multi.multipletests(df_results.p, method = 'fdr_bh')[1]
