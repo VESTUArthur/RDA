@@ -12,7 +12,8 @@ import seaborn as sns
 import plotly.express as px
 import statsmodels.stats.multitest as multi
 from matplotlib_venn import venn2
-#from metacycle import Metacycle as mc
+
+
 def cycMouseLiverRNA(filename) :
         """  
         Save MetaCycle dataset cycMouseLiverRNA
@@ -331,7 +332,7 @@ def pValues(filename):
         filename : str
             name of the input file
         """
-        os.makedirs('images', exist_ok=True)
+        os.makedirs(f'images/{filename[:-4]}/dist', exist_ok=True)
         try:
             mout = pd.read_csv(f'metaout/meta2d_{filename}')
             colnames=mout.columns.to_list()
@@ -352,13 +353,13 @@ def pValues(filename):
             pv["Rain_pvalue"]=rout["pVal"]
         except:
             print('no Rainout of this file')
-        fig1 = ff.create_table(mout[pvalue])
+        fig1 = ff.create_table(pv)
         fig1.show()
         for i in pv.columns[1:]:
             plt.hist(pv[i])
             plt.ylabel('count')
             plt.title(i)
-            plt.savefig(f'images/{i}_{filename[:-4]}.png',facecolor='white')
+            plt.savefig(f'images/{filename[:-4]}/dist/dist_{i}_{filename[:-4]}.png',facecolor='white')
             plt.show()
             print(i,': ok')
     
@@ -372,12 +373,52 @@ def venn(filename):
         filename : str
             name of the input file
         """
-        venn2(subsets = (10, 5, 2), set_labels = ('Group A', 'Group B'))
-        plt.show()
+        os.makedirs(f'images/{filename[:-4]}/venn', exist_ok=True)
+        try:
+            mout = pd.read_csv(f'metaout/meta2d_{filename}')
+            colnames=mout.columns.to_list()
+            pvalue=['CycID']
+            for i in range(len(colnames)):
+                if colnames[i][-2]=='u':
+                    pvalue.append(colnames[i])
+            pv=mout[pvalue]
+        except:
+            print('no meta2out of this file')
+        try:
+            cout=pd.read_csv(f"cosinorpyout/COSINORresult_{filename}")
+            pv['Cosinor_pvalue']=cout['p']
+        except:
+            print('no Cosinorout of this file')
+        try:
+            rout=pd.read_csv(f"rainout/RAINresult_{filename}")
+            pv["Rain_pvalue"]=rout["pVal"]
+        except:
+            print('no Rainout of this file')
+        for col in range(1,len(pv.columns)):
+            for coll in range(col,len(pv.columns)):
+                print(range(1,len(pv)),'-----col',col,'coll',coll)
+                l1=0
+                for val in range(len(pv.values)):
+                    if pv.iloc[[val], [col]].to_numpy()[0]<0.05 and pv.iloc[[val], [coll]].to_numpy()[0]<0.05:
+                        l1+=1
+                l2=pv[pv.iloc[:, [col]]<0.05].count()[col]
+                print('cal2:',pv[pv.iloc[:, [col]]<0.05].count()[col])
+                print('sel2:',pv[pv.iloc[:, [col]]<0.05].count())
+                l3=pv[pv.iloc[:, [coll]]<0.05].count()[coll]
+                print('cal3:',pv[pv.iloc[:, [coll]]<0.05].count()[coll])
+                print('sel3:',pv[pv.iloc[:, [coll]]<0.05].count())
+                print('col:',col,pv.columns[col],'coll:',coll,pv.columns[coll],'l2:',l2,'l3:',l3,'l1:',l1)
+                if ((l1>0) or (l2>0) or (l3>0)) and (col!=coll):
+                    venn2(subsets = (l2-l1,l3-l1,l1), set_labels = (pv.columns[col], pv.columns[coll]))
+                    plt.savefig(f'images/{filename[:-4]}/venn/venn_{pv.columns[col]}_{pv.columns[coll]}_{filename[:-4]}.png',facecolor='white')
+                    plt.show()
+                else: 
+                    print('no venn')
+        return pv
 
-def cosinorTestData(df=file_parser.generate_test_data(phase = 0, n_components = 1, name="test1", noise=0.5, replicates = 3),phase = np.pi,n_components = 1,name="test2",noise=0.5, replicates = 3):
+def syntRhythmicData(filename):
         """  
-        Load test data in cosinor format
+        Load test data in cosinor format (rhythmic)
         ...
 
         Parameters
@@ -385,6 +426,60 @@ def cosinorTestData(df=file_parser.generate_test_data(phase = 0, n_components = 
         ...
 
         """
-        df2 = file_parser.generate_test_data(phase = phase, n_components = n_components, name=name, noise=noise, replicates = replicates)
+        replicates=3
+        df = file_parser.generate_test_data(phase = 0, n_components = 1, name="test1", noise=0.5, replicates = 3)
+        df2 = file_parser.generate_test_data(phase = np.pi,n_components = 1,name="test2",noise=0.5, replicates = 3)
         df=pd.concat([df,df2],ignore_index=True)
-        return df
+        dff=pd.DataFrame()
+        for i in range(1,replicates+1):
+            dfx= 'ZT_'+ df["x"].astype(int).astype(str) + f'_{i}' 
+            dff=pd.concat([dff,pd.Series(dfx.unique())],ignore_index=True)
+        df_new =pd.DataFrame(index=df.test.unique(),columns=dff.to_numpy().flatten()) 
+        var = 0
+        for i in range(len(df_new)):
+            for col in df_new:
+                df_new[col].iloc[i]= df.iloc[var].y
+                var+=1  
+        dfout=pd.DataFrame()
+        for i in range(1,replicates+1):
+            dfx=df["x"].astype(int).astype(str)
+            print(dfx)
+            dfout=pd.concat([dfout,pd.Series(dfx.unique())],ignore_index=True)
+        print(dff.to_numpy().flatten())
+        df_new.columns=dfout.to_numpy().flatten()
+        df_new.to_csv(f"{filename[:-4]}.csv")
+        return df_new
+
+def syntRandomData(filename):
+        """  
+        Load test data in cosinor format (non-rhythmic)
+        ...
+
+        Parameters
+        ----------
+        ...
+
+        """
+        replicates=3
+        df = file_parser.generate_test_data_group_random(phase = 0, n_components = 1, name="test1", noise=0.5, replicates = 3)
+        df2 = file_parser.generate_test_data_group_random(phase = np.pi,n_components = 1,name="test2",noise=0.5, replicates = 3)
+        df=pd.concat([df,df2],ignore_index=True)
+        dff=pd.DataFrame()
+        for i in range(1,replicates+1):
+            dfx= 'ZT_'+ df["x"].astype(int).astype(str) + f'_{i}' 
+            dff=pd.concat([dff,pd.Series(dfx.unique())],ignore_index=True)
+        df_new =pd.DataFrame(index=df.test.unique(),columns=dff.to_numpy().flatten()) 
+        var = 0
+        for i in range(len(df_new)):
+            for col in df_new:
+                df_new[col].iloc[i]= df.iloc[var].y
+                var+=1  
+        dfout=pd.DataFrame()
+        for i in range(1,replicates+1):
+            dfx=df["x"].astype(int).astype(str)
+            print(dfx)
+            dfout=pd.concat([dfout,pd.Series(dfx.unique())],ignore_index=True)
+        print(dff.to_numpy().flatten())
+        df_new.columns=dfout.to_numpy().flatten()
+        df_new.to_csv(f"{filename[:-4]}.csv")
+        return df_new
