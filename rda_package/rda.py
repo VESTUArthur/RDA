@@ -46,7 +46,7 @@ def cycMouseLiverProtein(filename) :
         r = robjects.r
         r['library']('MetaCycle')
         r(f"""annot<-cycMouseLiverProtein[1]
-            data<-cycMouseLiverRNA
+            data<-cycMouseLiverProtein
             data$geneName<-NULL
             head(data)
             colnames(data)<-sub('..', '', colnames(data))
@@ -243,7 +243,6 @@ def rain(filename,sampleRate=1,nbReplicate=1,period=24):
         r = robjects.r
         r['library']('rain')
         r(f"""data <- read.csv("{filename}", row.names = 1)
-            head(data)
             sampleRate <- {sampleRate}
             nbReplicate <- {nbReplicate}
             period <- {period}
@@ -416,7 +415,7 @@ def venn(filename):
                     print('no venn')
         return pv
 
-def syntRhythmicData(filename):
+def syntRhythmicData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):
         """  
         Load test data in cosinor format (rhythmic)
         ...
@@ -426,10 +425,7 @@ def syntRhythmicData(filename):
         ...
 
         """
-        replicates=3
-        df = file_parser.generate_test_data(phase = 0, n_components = 1, name="test1", noise=0.5, replicates = 3)
-        df2 = file_parser.generate_test_data(phase = np.pi,n_components = 1,name="test2",noise=0.5, replicates = 3)
-        df=pd.concat([df,df2],ignore_index=True)
+        df=file_parser.generate_test_data_group(N=n_test,n_components = n_components, noise=noise, replicates = replicates)
         dff=pd.DataFrame()
         for i in range(1,replicates+1):
             dfx= 'ZT_'+ df["x"].astype(int).astype(str) + f'_{i}' 
@@ -448,11 +444,12 @@ def syntRhythmicData(filename):
         print(dff.to_numpy().flatten())
         df_new.columns=dfout.to_numpy().flatten()
         df_new.to_csv(f"{filename[:-4]}.csv")
+        #file_parser.export_csv(df,f"export_{filename[:-4]}.csv")
         return df_new
 
-def syntRandomData(filename):
+def syntRandomData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):
         """  
-        Load test data in cosinor format (non-rhythmic)
+        Load test data in cosinor format (rhythmic)
         ...
 
         Parameters
@@ -460,10 +457,7 @@ def syntRandomData(filename):
         ...
 
         """
-        replicates=3
-        df = file_parser.generate_test_data_group_random(phase = 0, n_components = 1, name="test1", noise=0.5, replicates = 3)
-        df2 = file_parser.generate_test_data_group_random(phase = np.pi,n_components = 1,name="test2",noise=0.5, replicates = 3)
-        df=pd.concat([df,df2],ignore_index=True)
+        df=file_parser.generate_test_data_group_random(N=n_test,n_components = n_components, noise=noise, replicates = replicates)
         dff=pd.DataFrame()
         for i in range(1,replicates+1):
             dfx= 'ZT_'+ df["x"].astype(int).astype(str) + f'_{i}' 
@@ -482,4 +476,5 @@ def syntRandomData(filename):
         print(dff.to_numpy().flatten())
         df_new.columns=dfout.to_numpy().flatten()
         df_new.to_csv(f"{filename[:-4]}.csv")
+        #file_parser.export_csv(df,f"export_{filename[:-4]}.csv")
         return df_new
