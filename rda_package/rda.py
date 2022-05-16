@@ -449,7 +449,7 @@ def syntRhythmicData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):
 
 def syntRandomData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):
         """  
-        Load test data in cosinor format (rhythmic)
+        Load test data in cosinor format (non-rhythmic)
         ...
 
         Parameters

@@ -4,7 +4,7 @@ Include different functions that allow the user to perform rhythmic data analysi
 
 ## Installation
 
- Can be intalled with ``pip`` :
+ Can be installed with ``pip`` :
 ```python
 pip install -i https://test.pypi.org/simple/ rda-VESTUArthur
 ```
@@ -32,7 +32,7 @@ from rda_package import rda
 ``cosinorpy(filename,sep=',', n_components = 2, period = 24, names = "",folder=None, **kwargs):``
     Perform Cosinor analysis and store the result in the cosinorpyout folder
 
-``cosinorPop(df,filename,period):``
+``cosinorPop(filename,sep,period):``
     Perform Cosinor analysis for population data and store the result in the cosinorpyout folder
 
 ``rain(filename,sampleRate=1,nbReplicate=1,period=24):``
@@ -50,7 +50,8 @@ from rda_package import rda
 ``venn(filename):``
     Plot and save in images folder venn diagram
 
-``cosinorTestData(df=file_parser.generate_test_data(phase = 0, n_components = 1, name="test1", noise=0.5, replicates = 3),phase = np.pi,n_components = 1,name="test2",noise=0.5, replicates = 3):``
-    Load test data in cosinor format
+``syntRhythmicData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):``
+    Load test data in cosinor format (rhythmic)
 
-
+``syntRandomData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):``
+    Load test data in cosinor format (non-rhythmic)
