@@ -27,7 +27,7 @@ from rda_package import rda
     Try format a given file to be usable with meta2d
     
 ``meta2d(filename,filestyle='csv',timepoints='line1'):``
-    Perform meta2d analysis (JTK,ARS,LS) and store the result in the metaout folder
+    Perform meta2d analysis (JTK,LS and if no replicates ARS) and store the result in the metaout folder
 
 ``cosinorpy(filename,sep=',', n_components = 2, period = 24, names = "",folder=None, **kwargs):``
     Perform Cosinor analysis and store the result in the cosinorpyout folder

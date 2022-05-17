@@ -24,6 +24,7 @@ def cycMouseLiverRNA(filename) :
         filename : str
             name of the saved file
         """
+        os.makedirs(f'Out/{filename[:-4]}', exist_ok=True)
         r = robjects.r
         r['library']('MetaCycle')
         r(f"""annot<-cycMouseLiverRNA[1]
@@ -31,7 +32,7 @@ def cycMouseLiverRNA(filename) :
             data$geneName<-NULL
             colnames(data) <- sub("..", "", colnames(data))
             head(data)
-            write.csv(data,'{filename}')""")
+            write.csv(data,'Out/{filename[:-4]}/{filename}')""")
     
 def cycMouseLiverProtein(filename) :
         """  
@@ -43,6 +44,7 @@ def cycMouseLiverProtein(filename) :
         filename : str
             name of the saved file
         """
+        os.makedirs(f'Out/{filename[:-4]}', exist_ok=True)
         r = robjects.r
         r['library']('MetaCycle')
         r(f"""annot<-cycMouseLiverProtein[1]
@@ -50,7 +52,7 @@ def cycMouseLiverProtein(filename) :
             data$geneName<-NULL
             head(data)
             colnames(data)<-sub('..', '', colnames(data))
-            write.csv(data,'{filename}')""")
+            write.csv(data,'Out/{filename[:-4]}/{filename}')""")
             
 def menetRNASeqMouseLiver(filename) :
         """  
@@ -62,6 +64,7 @@ def menetRNASeqMouseLiver(filename) :
         filename : str
             name of the saved file
         """
+        os.makedirs(f'Out/{filename[:-4]}', exist_ok=True)
         r = robjects.r
         r(f"""
             citation("Biobase")
@@ -69,7 +72,7 @@ def menetRNASeqMouseLiver(filename) :
             data(menetRNASeqMouseLiver)
             data <- menetRNASeqMouseLiver
             rownames(data) <- NULL
-            write.csv(data, "{filename}")""")
+            write.csv(data, "Out/{filename[:-4]}/{filename}")""")
 
 def meta2dFormat(filename,sep=','):
         """  
@@ -83,7 +86,8 @@ def meta2dFormat(filename,sep=','):
         sep : str
             separator of the file
         """
-        df1 = pd.read_csv(filename, sep=sep)
+        os.makedirs(f'Out/{filename[:-4]}', exist_ok=True)
+        df1 = pd.read_csv(f'Out/{filename[:-4]}/{filename}', sep=sep)
         header = np.array(list(map(lambda s: re.sub('[^0-9_]','', s), df1.columns[1:])))
         print(df1.columns)
         print(header)
@@ -100,7 +104,7 @@ def meta2dFormat(filename,sep=','):
         newnames=list(map(lambda t: int(t.split('_')[1]), header[shuffle]))
         x.extend(newnames)
         df1.columns=x
-        df1.to_csv(f"{filename[:-4]}.csv", index=False)
+        df1.to_csv(f"Out/{filename[:-4]}/{filename[:-4]}.csv", index=False)
 
 def meta2d(filename,filestyle='csv',timepoints='line1'):
         """  
@@ -118,15 +122,16 @@ def meta2d(filename,filestyle='csv',timepoints='line1'):
             a numeric vector corresponding to sampling time points of input time-series data; 
             if sampling time points are in the first line of input file, it could be set as a character sting-"Line1" or "line1".
         """
+        os.makedirs(f'Out/{filename[:-4]}/metaout', exist_ok=True)
         r = robjects.r
         r['library']('MetaCycle')
-        r(f"""meta2d('{filename}',timepoints='{timepoints}',filestyle = '{filestyle}')""")
+        r(f"""meta2d('Out/{filename[:-4]}/{filename}',timepoints='{timepoints}',filestyle = '{filestyle}',cycMethod = c("ARS", "JTK", "LS"),outdir='Out/{filename[:-4]}/metaout')""")
         print('Meta2d Done :)')
 
    
 
 def meta2dOut(filename):
-        dff = pd.read_csv(f'metaout/meta2d_{filename}')
+        dff = pd.read_csv(f'Out/{filename[:-4]}/metaout/meta2d_{filename}')
         return dff
 
 
@@ -150,8 +155,8 @@ def cosinorpy(filename,sep=',', n_components = 2, period = 24,folder=None, **kwa
         folder : str
             folder to store Plot if wanted
         """
-        df=file_parser.read_csv(filename,sep)
-        os.makedirs('cosinorpyout', exist_ok=True)
+        df=file_parser.read_csv(f'Out/{filename[:-4]}/{filename}',sep)
+        os.makedirs(f'Out/{filename[:-4]}/cosinorpyout', exist_ok=True)
         df['test'] = df['test'].astype(str)
         df_results = pd.DataFrame(columns = ['test', 'period', 'n_components', 'p', 'q', 'p_reject', 'q_reject', 'RSS', 'R2', 'R2_adj', 'log-likelihood', 'amplitude', 'acrophase', 'mesor', 'peaks', 'heights', 'troughs', 'heights2'], dtype=float)
         if type(period) == int:
@@ -200,7 +205,7 @@ def cosinorpy(filename,sep=',', n_components = 2, period = 24,folder=None, **kwa
         df_results.q = multi.multipletests(df_results.p, method = 'fdr_bh')[1]
         df_results.q_reject = multi.multipletests(df_results.p_reject, method = 'fdr_bh')[1]  
         df_best_fits = cosinor.get_best_fits(df_results,criterium='RSS', reverse = False)
-        df_best_fits.to_csv(f"cosinorpyout/COSINORresult_{filename}", index=False)   
+        df_best_fits.to_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename}", index=False)   
         print('Cosinor Done :)') 
         return df_results
     
@@ -218,11 +223,12 @@ def cosinorpyPop(filename,sep,period):
         period : int
             period of the analysed data
         """
+        os.makedirs(f'Out/{filename[:-4]}/cosinorpyout', exist_ok=True)
         df=file_parser.read_csv(filename,sep)
         os.makedirs('cosinorpyout', exist_ok=True)
         df_results = cosinor.population_fit_group(df,period=period,folder='cosinorpyout')
         df_best_fits = cosinor.get_best_fits(df_results,criterium='RSS', reverse = False)
-        df_best_fits.to_csv(f"cosinorpyout/COSINORPopresult_{filename}", index=False)
+        df_best_fits.to_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINORPopresult_{filename}", index=False)
     
 def rain(filename,sampleRate=1,nbReplicate=1,period=24):
         """  
@@ -240,16 +246,17 @@ def rain(filename,sampleRate=1,nbReplicate=1,period=24):
         period : int
             period of the analysed data
         """
+        os.makedirs(f'Out/{filename[:-4]}/rainout', exist_ok=True)
         r = robjects.r
         r['library']('rain')
-        r(f"""data <- read.csv("{filename}", row.names = 1)
+        r(f"""data <- read.csv("Out/{filename[:-4]}/{filename}", row.names = 1)
             sampleRate <- {sampleRate}
             nbReplicate <- {nbReplicate}
             period <- {period}
             res <- rain(t(data), deltat = sampleRate, 
                 nr.series = nbReplicate, period = period, verbose = TRUE)
-            dir.create("rainout", showWarnings = FALSE)
-            write.csv(res, "rainout/RAINresult_{filename}")""")
+            dir.create("Out/{filename[:-4]}/rainout", showWarnings = FALSE)
+            write.csv(res, "Out/{filename[:-4]}/rainout/RAINresult_{filename}")""")
         print('RAIN Done :)')
 
 def periodogram(df):
@@ -284,7 +291,7 @@ def plotMeta2d(filename,pvalue_plot=False,amplitude_plot=False,period_plot=False
         phase_plot : bool
             if True plot the Table
         """
-        dff = pd.read_csv(f'metaout/meta2d_{filename}')
+        dff = pd.read_csv(f'Out/{filename[:-4]}/metaout/meta2d_{filename}')
         colnames=dff.columns.to_list()
         pvalue=['CycID']
         amplitude=['CycID']
@@ -321,7 +328,7 @@ def plotMeta2d(filename,pvalue_plot=False,amplitude_plot=False,period_plot=False
             fig5 = ff.create_table(dff[phase])
             fig5.show()
 
-def pValues(filename):
+def pValues(filename,metaout=True,cosinorpyout=True,rainout=True):
         """  
         Plot and save in images folder pvalues distributions
         ...
@@ -331,36 +338,39 @@ def pValues(filename):
         filename : str
             name of the input file
         """
-        os.makedirs(f'images/{filename[:-4]}/dist', exist_ok=True)
-        try:
-            mout = pd.read_csv(f'metaout/meta2d_{filename}')
+        pv=pd.DataFrame()
+        os.makedirs(f'Out/{filename[:-4]}/dist', exist_ok=True)
+        if(metaout==True):
+            mout = pd.read_csv(f'Out/{filename[:-4]}/metaout/meta2d_{filename}')
             colnames=mout.columns.to_list()
             pvalue=['CycID']
             for i in range(len(colnames)):
                 if colnames[i][-2]=='u':
                     pvalue.append(colnames[i])
             pv=mout[pvalue]
-        except:
+        else:
             print('no meta2out of this file')
-        try:
-            cout=pd.read_csv(f"cosinorpyout/COSINORresult_{filename}")
+        if(cosinorpyout==True):
+            cout=pd.read_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename}")
             pv['Cosinor_pvalue']=cout['p']
-        except:
+        else:
             print('no Cosinorout of this file')
-        try:
-            rout=pd.read_csv(f"rainout/RAINresult_{filename}")
+        if(rainout==True):
+            rout=pd.read_csv(f"Out/{filename[:-4]}/rainout/RAINresult_{filename}")
             pv["Rain_pvalue"]=rout["pVal"]
-        except:
+        else:
             print('no Rainout of this file')
-        fig1 = ff.create_table(pv)
-        fig1.show()
+        #fig1 = ff.create_table(pv)
+        #fig1.show()
         for i in pv.columns[1:]:
             plt.hist(pv[i])
             plt.ylabel('count')
             plt.title(i)
-            plt.savefig(f'images/{filename[:-4]}/dist/dist_{i}_{filename[:-4]}.png',facecolor='white')
-            plt.show()
+            plt.savefig(f'Out/{filename[:-4]}/dist/dist_{i}_{filename[:-4]}.png',facecolor='white')
+            #plt.show()
+            plt.clf()
             print(i,': ok')
+        print('pValue Done :)') 
     
 def venn(filename):
         """  
@@ -372,9 +382,10 @@ def venn(filename):
         filename : str
             name of the input file
         """
-        os.makedirs(f'images/{filename[:-4]}/venn', exist_ok=True)
+        pv=pd.DataFrame()
+        os.makedirs(f'Out/{filename[:-4]}/venn', exist_ok=True)
         try:
-            mout = pd.read_csv(f'metaout/meta2d_{filename}')
+            mout = pd.read_csv(f'Out/{filename[:-4]}/metaout/meta2d_{filename}')
             colnames=mout.columns.to_list()
             pvalue=['CycID']
             for i in range(len(colnames)):
@@ -384,38 +395,40 @@ def venn(filename):
         except:
             print('no meta2out of this file')
         try:
-            cout=pd.read_csv(f"cosinorpyout/COSINORresult_{filename}")
+            cout=pd.read_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename}")
             pv['Cosinor_pvalue']=cout['p']
         except:
             print('no Cosinorout of this file')
         try:
-            rout=pd.read_csv(f"rainout/RAINresult_{filename}")
+            rout=pd.read_csv(f"Out/{filename[:-4]}/rainout/RAINresult_{filename}")
             pv["Rain_pvalue"]=rout["pVal"]
         except:
             print('no Rainout of this file')
         for col in range(1,len(pv.columns)):
             for coll in range(col,len(pv.columns)):
-                print(range(1,len(pv)),'-----col',col,'coll',coll)
+                #print(range(1,len(pv)),'-----col',col,'coll',coll)
                 l1=0
                 for val in range(len(pv.values)):
                     if pv.iloc[[val], [col]].to_numpy()[0]<0.05 and pv.iloc[[val], [coll]].to_numpy()[0]<0.05:
                         l1+=1
                 l2=pv[pv.iloc[:, [col]]<0.05].count()[col]
-                print('cal2:',pv[pv.iloc[:, [col]]<0.05].count()[col])
-                print('sel2:',pv[pv.iloc[:, [col]]<0.05].count())
+                #print('cal2:',pv[pv.iloc[:, [col]]<0.05].count()[col])
+                #print('sel2:',pv[pv.iloc[:, [col]]<0.05].count())
                 l3=pv[pv.iloc[:, [coll]]<0.05].count()[coll]
-                print('cal3:',pv[pv.iloc[:, [coll]]<0.05].count()[coll])
-                print('sel3:',pv[pv.iloc[:, [coll]]<0.05].count())
-                print('col:',col,pv.columns[col],'coll:',coll,pv.columns[coll],'l2:',l2,'l3:',l3,'l1:',l1)
+                #print('cal3:',pv[pv.iloc[:, [coll]]<0.05].count()[coll])
+                #print('sel3:',pv[pv.iloc[:, [coll]]<0.05].count())
+                #print('col:',col,pv.columns[col],'coll:',coll,pv.columns[coll],'l2:',l2,'l3:',l3,'l1:',l1)
                 if ((l1>0) or (l2>0) or (l3>0)) and (col!=coll):
                     venn2(subsets = (l2-l1,l3-l1,l1), set_labels = (pv.columns[col], pv.columns[coll]))
-                    plt.savefig(f'images/{filename[:-4]}/venn/venn_{pv.columns[col]}_{pv.columns[coll]}_{filename[:-4]}.png',facecolor='white')
-                    plt.show()
+                    plt.savefig(f'Out/{filename[:-4]}/venn/venn_{pv.columns[col]}_{pv.columns[coll]}_{filename[:-4]}.png',facecolor='white')
+                    plt.clf()
+                    #plt.show()
                 else: 
                     print('no venn')
+        print('venn Done :)') 
         return pv
 
-def syntRhythmicData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):
+def syntRhythmicData(filename,n_test=1,n_components=1,noise=0.5,replicates=1):
         """  
         Load test data in cosinor format (rhythmic)
         ...
@@ -425,6 +438,7 @@ def syntRhythmicData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):
         ...
 
         """
+        os.makedirs(f'Out/{filename[:-4]}', exist_ok=True)
         df=file_parser.generate_test_data_group(N=n_test,n_components = n_components, noise=noise, replicates = replicates)
         dff=pd.DataFrame()
         for i in range(1,replicates+1):
@@ -439,15 +453,15 @@ def syntRhythmicData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):
         dfout=pd.DataFrame()
         for i in range(1,replicates+1):
             dfx=df["x"].astype(int).astype(str)
-            print(dfx)
+            #print(dfx)
             dfout=pd.concat([dfout,pd.Series(dfx.unique())],ignore_index=True)
-        print(dff.to_numpy().flatten())
+        #print(dff.to_numpy().flatten())
         df_new.columns=dfout.to_numpy().flatten()
-        df_new.to_csv(f"{filename[:-4]}.csv")
+        df_new.to_csv(f"Out/{filename[:-4]}/{filename[:-4]}.csv")
         #file_parser.export_csv(df,f"export_{filename[:-4]}.csv")
         return df_new
 
-def syntRandomData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):
+def syntRandomData(filename,n_test=1,n_components=1,replicates=1):
         """  
         Load test data in cosinor format (non-rhythmic)
         ...
@@ -457,7 +471,8 @@ def syntRandomData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):
         ...
 
         """
-        df=file_parser.generate_test_data_group_random(N=n_test,n_components = n_components, noise=noise, replicates = replicates)
+        os.makedirs(f'Out/{filename[:-4]}', exist_ok=True)
+        df=file_parser.generate_test_data_group_random(N=n_test,n_components = n_components,replicates = replicates)
         dff=pd.DataFrame()
         for i in range(1,replicates+1):
             dfx= 'ZT_'+ df["x"].astype(int).astype(str) + f'_{i}' 
@@ -471,10 +486,10 @@ def syntRandomData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):
         dfout=pd.DataFrame()
         for i in range(1,replicates+1):
             dfx=df["x"].astype(int).astype(str)
-            print(dfx)
+            #print(dfx)
             dfout=pd.concat([dfout,pd.Series(dfx.unique())],ignore_index=True)
-        print(dff.to_numpy().flatten())
+        #print(dff.to_numpy().flatten())
         df_new.columns=dfout.to_numpy().flatten()
-        df_new.to_csv(f"{filename[:-4]}.csv")
+        df_new.to_csv(f"Out/{filename[:-4]}/{filename[:-4]}.csv")
         #file_parser.export_csv(df,f"export_{filename[:-4]}.csv")
         return df_new
