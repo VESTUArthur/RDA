@@ -23,7 +23,7 @@ from rda_package import rda
 ``menetRNASeqMouseLiver(filename):``
     Save RAIN dataset menetRNASeqMouseLiver
     
-``meta2dFormat(filename,sep=','):``
+``meta2d_format(filename,sep=','):``
     Try format a given file to be usable with meta2d
     
 ``meta2d(filename,filestyle='csv',timepoints='line1'):``
@@ -32,26 +32,38 @@ from rda_package import rda
 ``cosinorpy(filename,sep=',', n_components = 2, period = 24, names = "",folder=None, **kwargs):``
     Perform Cosinor analysis and store the result in the cosinorpyout folder
 
-``cosinorPop(filename,sep,period):``
+``cosinor_pop(filename,sep,period):``
     Perform Cosinor analysis for population data and store the result in the cosinorpyout folder
 
-``rain(filename,sampleRate=1,nbReplicate=1,period=24):``
+``rain(filename,sample_rate=1,n_replicate=1,period=24):``
     Perform RAIN analysis and store the result in the rainout folder
     
 ``periodogram(df):``
     Plot the periodogram of a given dataset in cosinor format
 
-``plotMeta2d(filename,pvalue_plot=False,amplitude_plot=False,period_plot=False,qvalue_plot=False,phase_plot=False):``
+``plot_meta2d(filename,pvalue_plot=False,amplitude_plot=False,period_plot=False,qvalue_plot=False,phase_plot=False):``
     Plot meta2d result in downloadable graphic table
 
-``pValues(filename):``
+``pv_to_file(filename):``
+    Find all models results and save them in one file
+
+``pv_dist(filename):``
     Plot and save in images folder pvalues distributions
    
 ``venn(filename):``
     Plot and save in images folder venn diagram
 
-``syntRhythmicData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):``
-    Load test data in cosinor format (rhythmic)
+``synt_rhythmic_data(filename,half_rnd=False,n_test=1,n_components=1,noise=0.5,replicates=1):``
+    Create test data  (rhythmic)
 
-``syntRandomData(filename,n_test=2,n_components=1,noise=0.5,replicates=3):``
-    Load test data in cosinor format (non-rhythmic)
+``synt_random_data(filename,n_test=1,replicates=1):``
+    Create random test data  (non-rhythmic)
+
+``make_metrics(filename,y=None,half_rnd=False):``
+    Make metrics of an analyzed file
+
+``plot_metrics(filename):``
+    Plot metrics comparaison of ARS,JTK,LS,Meta2d,Cosinor,Rain
+
+``file_rda(filename,metrics=False,y=None,half_rnd=True,n_components=1,replicates=1,sample_rate=2):``
+    Perform meta2d,ARS,JTK,LS,Rain,Cosinor, make pv distribution, venn diagram and can plot metrics
