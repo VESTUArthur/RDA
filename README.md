@@ -25,6 +25,15 @@ from rda_package import rda
     
 ``meta2d_format(filename,sep=','):``
     Try format a given file to be usable with meta2d
+
+``meta_JTK(filename,filestyle='csv',timepoints='line1')``
+    Perform JTK analysis thanks to metacycle and store the result in the metaout folder
+
+``meta_ARS(filename,filestyle='csv',timepoints='line1')``
+    Perform ARS analysis thanks to metacycle and store the result in the metaout folder
+
+``meta_LS(filename,filestyle='csv',timepoints='line1')``
+    Perform LS analysis thanks to metacycle and store the result in the metaout folder
     
 ``meta2d(filename,filestyle='csv',timepoints='line1'):``
     Perform meta2d analysis (JTK,LS and if no replicates ARS) and store the result in the metaout folder
@@ -65,5 +74,5 @@ from rda_package import rda
 ``plot_metrics(filename):``
     Plot metrics comparaison of ARS,JTK,LS,Meta2d,Cosinor,Rain
 
-``file_rda(filename,metrics=False,y=None,half_rnd=True,n_components=1,replicates=1,sample_rate=2):``
+``file_rda(filename,metrics=False,half_rnd=True,n_components=1,replicates=1,sample_rate=2,y=None):``
     Perform meta2d,ARS,JTK,LS,Rain,Cosinor, make pv distribution, venn diagram and can plot metrics

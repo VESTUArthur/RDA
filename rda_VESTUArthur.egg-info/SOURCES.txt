@@ -1,0 +1,10 @@
+LICENSE.txt
+README.md
+pyproject.toml
+setup.cfg
+rda_VESTUArthur.egg-info/PKG-INFO
+rda_VESTUArthur.egg-info/SOURCES.txt
+rda_VESTUArthur.egg-info/dependency_links.txt
+rda_VESTUArthur.egg-info/top_level.txt
+rda_package/__init__.py
+rda_package/rda.py
