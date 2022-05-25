@@ -1,6 +1,6 @@
 # Rhythmic Data Analysis
 
-Include different functions that allow the user to perform rhythmic data analysis (LS, ARS, JTK, Cosinor, RAIN)
+Include different functions that allow the user to perform rhythmic data analysis (LS, ARS, JTK, Cosinor, RAIN).
 
 ## Installation
 
@@ -8,10 +8,25 @@ Include different functions that allow the user to perform rhythmic data analysi
 ```python
 pip install -i https://test.pypi.org/simple/ rda-VESTUArthur
 ```
-then you can ``import`` the package with :
+Then you can ``import`` the package with :
 ```python
 from rda_package import rda
 ```
+
+You must manually install the dependencies that allow the package to work properly :
+```python
+pip install numpy
+pip install pandas
+pip install plotly
+pip install rpy2
+pip install CosinorPy
+pip install matplotlib
+pip install matplotlib_venn
+pip install seaborn
+pip install statsmodels
+pip install sklearn
+```
+
 ## Functions
 
 `cycMouseLiverRNA(filename)`:
