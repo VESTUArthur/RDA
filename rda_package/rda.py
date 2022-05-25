@@ -23,7 +23,8 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import precision_score
-
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import matthews_corrcoef
 
 def cycMouseLiverRNA(filename) :
         """  
@@ -570,7 +571,11 @@ def synt_rhythmic_data(filename,half_rnd=False,n_test=1,n_components=1,noise=0.5
             number of replicate in the dataset
         """
         os.makedirs(f'Out/{filename[:-4]}', exist_ok=True)
-        df_rhd=file_parser.generate_test_data_group(N=n_test,n_components = n_components, noise=noise, replicates = replicates)
+        if(n_components==1):
+            df_rhd=file_parser.generate_test_data_group(N=n_test,n_components = n_components, noise=noise, replicates = replicates)
+        else:
+           df_rhd=file_parser.generate_test_data_group(N=n_test,n_components = n_components, noise=noise, replicates = replicates, 
+                amplitudes = [1, np.random.random(), np.random.random()], phase = [2*np.pi*np.random.random(), 2*np.pi*np.random.random(), 2*np.pi*np.random.random()])
         df_str_col=pd.DataFrame()
         for i in range(1,replicates+1):
             str_col= 'ZT_'+ df_rhd["x"].astype(int).astype(str) + f'_{i}' 
@@ -643,7 +648,7 @@ def synt_random_data(filename,n_test=1,replicates=1):
         #file_parser.export_csv(df,f"Out/{filename[:-4]}/{filename[:-4]}.csv")
         return df_new
 
-def make_metrics(filename,y=None,half_rnd=False):
+def make_metrics(filename,y=None,half_rnd=False,conf_matrix=True):
         """  
         Make metrics of an analyzed file
         ...
@@ -691,22 +696,39 @@ def make_metrics(filename,y=None,half_rnd=False):
         df_results = pd.DataFrame(columns = ['auc','precision','recall','f1','accuracy','model'], dtype=float)
         for col in x :
             try:
-                print(col, ' accuracy:', accuracy_score(y,x[col]), ' precision:', precision_score(y,x[col]), ' recall:', recall_score(y,x[col]), ' f1:',f1_score(y,x[col]), ' auc:', roc_auc_score(y,x[col]))
+                if conf_matrix==True:
+                    os.makedirs(f'Out/{filename[:-4]}/confusion_matrix', exist_ok=True)
+                    cm = confusion_matrix(y,x[col])
+                    group_names = ['True Neg','False Pos','False Neg','True Pos']
+                    group_counts = ['{0:0.0f}'.format(value) for value in cm.flatten()]
+                    group_percentages = ['{0:.2%}'.format(value) for value in cm.flatten()/np.sum(cm)]
+                    labels = [f'{v1}\n{v2}\n{v3}' for v1, v2, v3 in zip(group_names,group_counts,group_percentages)]
+                    labels = np.asarray(labels).reshape(2,2)
+                    #plt.figure(figsize=(10, 10))
+
+                    sns.heatmap(cm, annot=labels, fmt='',cmap='Blues')
+                    plt.suptitle(f'Metrics {col.split("_")[0]}  {filename[:-4]}',fontsize =20)
+                    plt.savefig(f"Out/{filename[:-4]}/confusion_matrix/{filename[:-4]}_{col.split('_')[0]}_confusion_matrix.png", bbox_inches="tight", facecolor='white')
+                    plt.show()
+                print(col, ' accuracy:', accuracy_score(y,x[col]), ' precision:', precision_score(y,x[col]), ' recall:', recall_score(y,x[col]), ' f1:',f1_score(y,x[col]), ' auc:', roc_auc_score(y,x[col]),'mcc:',matthews_corrcoef(y,x[col]))
                 df_results = df_results.append({'auc': roc_auc_score(y,x[col]), 
                                                 'precision': precision_score(y,x[col]),
                                                 'recall': recall_score(y,x[col]),
                                                 'f1': f1_score(y,x[col]), 
                                                 'accuracy': accuracy_score(y,x[col]),
-                                                'model': col.split('_')[0]
+                                                'model': col.split('_')[0],
+                                                'mcc': matthews_corrcoef(y,x[col])
                                                 }, ignore_index=True)
             except:
                 print(col, ' accuracy:', accuracy_score(y,x[col]), ' precision:', precision_score(y,x[col]), ' recall:', recall_score(y,x[col]), ' f1:',f1_score(y,x[col]), ' auc:', 0)
+                tn, fp, fn, tp = confusion_matrix(y,x[col]).ravel()
                 df_results = df_results.append({'auc': 0, 
                                                 'precision': precision_score(y,x[col]),
                                                 'recall': recall_score(y,x[col]),
                                                 'f1': f1_score(y,x[col]), 
                                                 'accuracy': accuracy_score(y,x[col]),
-                                                'model': col.split('_')[0]
+                                                'model': col.split('_')[0],
+                                                'mcc': matthews_corrcoef(y,x[col])
                                                 }, ignore_index=True)
                 
         print('metrics Done :)') 
@@ -729,7 +751,7 @@ def plot_metrics(filename):
         fig, axes = plt.subplots(ncols = ncols, nrows = nrows, sharey=False)
         axes = axes.flatten()         
         fig.set_size_inches(10, 10)
-        metrics = ["precision", "f1", "recall", "accuracy", "auc"]
+        metrics = ["precision", "f1", "recall", "accuracy", "auc","mcc"]
         for ax, metric in zip(axes, metrics):
             #sns.barplot(data=df_after_ind, x='model', y=metric, ax=ax, ci=95) # ci=95 --> 95% confidence interval
             sns.barplot(data=df_metrics, x='model', y=metric, ax=ax, ci=68) # ci=68 --> standard error!
