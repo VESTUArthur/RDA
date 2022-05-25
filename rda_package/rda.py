@@ -11,11 +11,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 import statsmodels.stats.multitest as multi
-import time
-from collections import defaultdict
-import seaborn as sns
-import scipy
-import statsmodels.stats.api as sms
 from matplotlib_venn import venn2
 from sklearn.preprocessing import Binarizer
 from sklearn.metrics import accuracy_score
