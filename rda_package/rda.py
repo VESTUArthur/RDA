@@ -743,13 +743,15 @@ def plot_metrics(filename):
         df_metrics = pd.read_csv(f"Out/{filename[:-4]}/metrics_{filename[:-4]}.csv")
         ncols = 2
         nrows = 3
+        sns.set_style("white")
+        flatui = ['#d9d9d9','#bdbdbd','#969696','#737373','#525252','#252525']
         fig, axes = plt.subplots(ncols = ncols, nrows = nrows, sharey=False)
         axes = axes.flatten()         
         fig.set_size_inches(10, 10)
         metrics = ["precision", "f1", "recall", "accuracy", "auc","mcc"]
         for ax, metric in zip(axes, metrics):
             #sns.barplot(data=df_after_ind, x='model', y=metric, ax=ax, ci=95) # ci=95 --> 95% confidence interval
-            sns.barplot(data=df_metrics, x='model', y=metric, ax=ax, ci=68) # ci=68 --> standard error!
+            sns.barplot(data=df_metrics, x='model', y=metric, ax=ax, ci=68,palette=flatui) # ci=68 --> standard error!
             ax.set_ylabel(metric)
         plt.suptitle(f'Metrics  {filename[:-4]}')
         fig.subplots_adjust(top=0.95)
