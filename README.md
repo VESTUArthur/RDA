@@ -26,6 +26,7 @@ pip install seaborn
 pip install statsmodels
 pip install sklearn
 ```
+To finish, don't forget to install R if it's not already installed : https://cran.r-project.org/bin/windows/base/
 
 ## Functions
 
