@@ -12,8 +12,9 @@ Then you can ``import`` the package with :
 ```python
 from rda_package import rda
 ```
+The setup.cfg file install automatically the dependencies necessary for the proper functioning of the package.
 
-You must manually install the dependencies that allow the package to work properly :
+Otherwise, if the dependencies do not install automatically, you must manually install them :
 ```python
 pip install numpy
 pip install pandas
