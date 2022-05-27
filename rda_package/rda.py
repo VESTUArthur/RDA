@@ -94,92 +94,34 @@ def meta2d_format(filename,sep=','):
             separator of the file
         """
         os.makedirs(f'Out/{filename[:-4]}', exist_ok=True)
-        df1 = pd.read_csv(f'Out/{filename[:-4]}/{filename}', sep=sep)
+        df1 = pd.read_csv(filename, sep=sep)
         header = np.array(list(map(lambda s: re.sub('[^0-9_]','', s), df1.columns[1:])))
         print(df1.columns)
         print(header)
-        reps = int(header[-1].split('_')[2])
-        t1 = int(header[0].split("_")[1])
-        t2 = int(header[reps].split("_")[1])
-        max_time = int(header[-1].split("_")[1])
+        try:
+            reps = int(header[-1].split('_')[2])
+            t1 = int(header[0].split("_")[1])
+            t2 = int(header[reps].split("_")[1])
+            max_time = int(header[-1].split("_")[1])
+        except:
+            try:
+                reps = int(header[-1].split('_')[1])
+                t1 = int(header[0].split("_")[0])
+                t2 = int(header[reps].split("_")[0])
+                max_time = int(header[-1].split("_")[0])
+            except: raise
         dt = t2-t1
         measurements = max_time//dt
         shuffle = np.array([(np.arange(0,measurements*reps+1,reps))+i for i in range(reps)]).flatten()
-        print(shuffle)
         x= ['id']
-        print(list(map(lambda t: int(t.split('_')[1]), header[shuffle])))
+        #print(list(map(lambda t: int(t.split('_')[1]), header[shuffle])))
         newnames=list(map(lambda t: int(t.split('_')[1]), header[shuffle]))
         x.extend(newnames)
         df1.columns=x
         df1.to_csv(f"Out/{filename[:-4]}/{filename[:-4]}.csv", index=False)
 
-def meta_JTK(filename,filestyle='csv',timepoints='line1'):
-        """  
-        Perform JTK analysis thanks to metacycle and store the result in the metaout folder
-        ...
 
-        Parameters
-        ----------
-        filename : str
-            name of the input file
-        filestyle : str
-            The data format of input file, must be "txt", or "csv", or a character vector containing field separator character(sep),
-            quoting character (quote), and the character used for decimal points(dec, for details see read.table).
-        timepoints : str, [] 
-            a numeric vector corresponding to sampling time points of input time-series data; 
-            if sampling time points are in the first line of input file, it could be set as a character sting-"Line1" or "line1".
-        """
-        os.makedirs(f'Out/{filename[:-4]}/metaout', exist_ok=True)
-        r = robjects.r
-        r['library']('MetaCycle')
-        r(f"""meta2d('Out/{filename[:-4]}/{filename}',timepoints='{timepoints}',filestyle = '{filestyle}',cycMethod = c("JTK"),outdir='Out/{filename[:-4]}/metaout')""")
-        print('Meta JTK Done :)')
-
-def meta_ARS(filename,filestyle='csv',timepoints='line1'):
-        """  
-        Perform ARS analysis thanks to metacycle and store the result in the metaout folder
-        ...
-
-        Parameters
-        ----------
-        filename : str
-            name of the input file
-        filestyle : str
-            The data format of input file, must be "txt", or "csv", or a character vector containing field separator character(sep),
-            quoting character (quote), and the character used for decimal points(dec, for details see read.table).
-        timepoints : str, [] 
-            a numeric vector corresponding to sampling time points of input time-series data; 
-            if sampling time points are in the first line of input file, it could be set as a character sting-"Line1" or "line1".
-        """
-        os.makedirs(f'Out/{filename[:-4]}/metaout', exist_ok=True)
-        r = robjects.r
-        r['library']('MetaCycle')
-        r(f"""meta2d('Out/{filename[:-4]}/{filename}',timepoints='{timepoints}',filestyle = '{filestyle}',cycMethod = c("ARS"),outdir='Out/{filename[:-4]}/metaout')""")
-        print('Meta ARS Done :)')  
-
-def meta_LS(filename,filestyle='csv',timepoints='line1'):
-        """  
-        Perform LS analysis thanks to metacycle and store the result in the metaout folder
-        ...
-
-        Parameters
-        ----------
-        filename : str
-            name of the input file
-        filestyle : str
-            The data format of input file, must be "txt", or "csv", or a character vector containing field separator character(sep),
-            quoting character (quote), and the character used for decimal points(dec, for details see read.table).
-        timepoints : str, [] 
-            a numeric vector corresponding to sampling time points of input time-series data; 
-            if sampling time points are in the first line of input file, it could be set as a character sting-"Line1" or "line1".
-        """
-        os.makedirs(f'Out/{filename[:-4]}/metaout', exist_ok=True)
-        r = robjects.r
-        r['library']('MetaCycle')
-        r(f"""meta2d('Out/{filename[:-4]}/{filename}',timepoints='{timepoints}',filestyle = '{filestyle}',cycMethod = c("LS"),outdir='Out/{filename[:-4]}/metaout')""")
-        print('Meta LS Done :)')
-
-def meta2d(filename,filestyle='csv',timepoints='line1'):
+def meta2d(filename,filestyle='csv',timepoints='line1',models=("ARS", "JTK", "LS")):
         """  
         Perform meta2d analysis (JTK,ARS,LS) and store the result in the metaout folder
         ...
@@ -187,7 +129,7 @@ def meta2d(filename,filestyle='csv',timepoints='line1'):
         Parameters
         ----------
         filename : str
-            name of the input file
+            name of the input file (with path)
         filestyle : str
             The data format of input file, must be "txt", or "csv", or a character vector containing field separator character(sep),
             quoting character (quote), and the character used for decimal points(dec, for details see read.table).
@@ -195,21 +137,22 @@ def meta2d(filename,filestyle='csv',timepoints='line1'):
             a numeric vector corresponding to sampling time points of input time-series data; 
             if sampling time points are in the first line of input file, it could be set as a character sting-"Line1" or "line1".
         """
-        os.makedirs(f'Out/{filename[:-4]}/metaout', exist_ok=True)
+        os.makedirs(f'Out/{filename.split("/")[-1][:-4]}/metaout', exist_ok=True)
+        print(filename.split('/')[-1][:-4])
         r = robjects.r
         r['library']('MetaCycle')
-        r(f"""meta2d('Out/{filename[:-4]}/{filename}',timepoints='{timepoints}',filestyle = '{filestyle}',cycMethod = c("ARS", "JTK", "LS"),outdir='Out/{filename[:-4]}/metaout')""")
+        r(f"""meta2d('{filename}',timepoints='{timepoints}',filestyle = '{filestyle}',cycMethod = c("ARS", "JTK", "LS"),outdir='Out/{filename.split('/')[-1][:-4]}/metaout')""")
         print('Meta2d Done :)')
 
-def cosinorpy(filename,sep=',', n_components = 2, period = 24,folder=None, **kwargs):
-        """  
+def cosinorpy(filename,sep=',',folder_in='', n_components = 2, period = 24,folder=None, **kwargs):
+        """ 
         Perform Cosinor analysis and store the result in the cosinorpyout folder
         ...
 
         Parameters
         ----------
         filename : str
-            name of the input file
+            name of the input file (with path)
         sep : str
             separator of the file
         n_components : int
@@ -219,7 +162,11 @@ def cosinorpy(filename,sep=',', n_components = 2, period = 24,folder=None, **kwa
         folder : str
             folder to store Plot if wanted
         """
-        df=file_parser.read_csv(f'Out/{filename[:-4]}/{filename}',sep)
+        if(filename[-4:]=='xlsx'):
+            df=file_parser.read_excel(filename)
+            print(df)
+        else:
+            df=file_parser.read_csv(filename,sep)
         os.makedirs(f'Out/{filename[:-4]}/cosinorpyout', exist_ok=True)
         df['test'] = df['test'].astype(str)
         df_results = pd.DataFrame(columns = ['test', 'period', 'n_components', 'p', 'q', 'p_reject', 'q_reject', 'RSS', 'R2', 'R2_adj', 'log-likelihood', 'amplitude', 'acrophase', 'mesor', 'peaks', 'heights', 'troughs', 'heights2'], dtype=float)
@@ -291,7 +238,7 @@ def cosinorpy(filename,sep=',', n_components = 2, period = 24,folder=None, **kwa
         df_results.q = multi.multipletests(df_results.p, method = 'fdr_bh')[1]
         df_results.q_reject = multi.multipletests(df_results.p_reject, method = 'fdr_bh')[1]  
         df_best_fits = cosinor.get_best_fits(df_results,criterium='RSS', reverse = False)
-        df_best_fits.to_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename}", index=False)   
+        df_best_fits.to_csv(f"Out/{filename.split('/')[-1][:-4]}/cosinorpyout/COSINORresult_{filename.split('/')[-1][:-4]}.csv", index=False)   
         print('Cosinor Done :)') 
         return df_results
     
@@ -303,7 +250,7 @@ def cosinorpy_pop(filename,sep,period):
         Parameters
         ----------
         filename : str
-            name of the input file
+            name of the input file (with path)
         sep : str
             separator of the file
         period : int
@@ -324,7 +271,7 @@ def rain(filename,sample_rate=1,n_replicate=1,period=24):
         Parameters
         ----------
         filename : str
-            name of the input file
+            name of the input file (with path)
         sample_rate : int
             the rate of the sample collection, interval between two sample
         n_replicate : int
@@ -335,7 +282,7 @@ def rain(filename,sample_rate=1,n_replicate=1,period=24):
         os.makedirs(f'Out/{filename[:-4]}/rainout', exist_ok=True)
         r = robjects.r
         r['library']('rain')
-        r(f"""data <- read.csv("Out/{filename[:-4]}/{filename}", row.names = 1)
+        r(f"""data <- read.csv("{filename}", row.names = 1)
             sampleRate <- {sample_rate}
             nbReplicate <- {n_replicate}
             period <- {period}
@@ -460,6 +407,7 @@ def pv_dist(filename):
 
         """
         pv=pd.DataFrame()
+        filename=filename.split("/")[-1]
         os.makedirs(f'Out/{filename[:-4]}/dist', exist_ok=True)
         try:
             mout = pd.read_csv(f'Out/{filename[:-4]}/metaout/meta2d_{filename}')
@@ -506,6 +454,7 @@ def venn(filename):
             name of the analyzed file
         """
         pv=pd.DataFrame()
+        filename=filename.split("/")[-1]
         os.makedirs(f'Out/{filename[:-4]}/venn', exist_ok=True)
         try:
             mout = pd.read_csv(f'Out/{filename[:-4]}/metaout/meta2d_{filename}')
@@ -758,7 +707,7 @@ def plot_metrics(filename):
         plt.savefig(f"Out/{filename[:-4]}/{filename[:-4]}_metrics.png", bbox_inches="tight", facecolor='white')
         plt.show()
 
-def file_rda(filename,metrics=False,half_rnd=True,n_components=1,replicates=1,sample_rate=2,period=24,y=None):
+def file_rda(filename,path='',filestyle='csv',metrics=False,half_rnd=True,n_components=1,replicates=1,sample_rate=2,period=24,y=None):
         """  
         Perform meta2d,ARS,JTK,LS,Rain,Cosinor, make pv distribution, venn diagram and can plot metrics
         ...
@@ -766,7 +715,7 @@ def file_rda(filename,metrics=False,half_rnd=True,n_components=1,replicates=1,sa
         Parameters
         ----------
         filename : str
-            name of the analyzed file
+            name (with path) of the analyzed file
         metrics : bool
             if true make metric
         y : list
@@ -780,12 +729,39 @@ def file_rda(filename,metrics=False,half_rnd=True,n_components=1,replicates=1,sa
         sample_rate : int
             the rate of the sample collection, interval between two sample
         """
-        meta2d(filename)
-        rain(filename,sample_rate=sample_rate,n_replicate=replicates,period=period)
-        cosinorpy(filename,n_components=n_components)
+        if(path!=''):
+            file=f"{path}/{filename}"
+        else:
+            file=filename
+        meta2d(file,filestyle)
+        rain(file,sample_rate=sample_rate,n_replicate=replicates,period=period)
+        cosinorpy(file,n_components=n_components)
         pv_dist(filename)
         venn(filename)
         if(metrics==True):
             make_metrics(filename,y,half_rnd)
             plot_metrics(filename)
 
+def cosinor_read(filename,sep='\t'):
+    filestyle = filename[-4:]
+    if(filestyle=='xlsx'):
+        df = file_parser.read_excel(filename)
+    else:
+        df = file_parser.read_csv(filename,sep)
+    return df
+
+def export_csv(df,filename):
+    filestyle = filename[-4:]
+    if(filestyle=='xlsx'):
+        file_parser.export_csv(df,f'{filename[:-4]}csv')
+    else:
+       file_parser.export_csv(df,filename)
+
+def plot_data(df,filename=None):
+    names = df.test.unique()
+    for name in names:
+        dff=df[df['test']==name]
+        sns.lineplot(data=dff,x='x',y='y',hue='test')
+        if(filename!=None):
+            plt.savefig(f"{filename}_{name}.png",facecolor='white')
+        plt.show()
