@@ -144,7 +144,7 @@ def meta2d(filename,filestyle='csv',timepoints='line1',models=("ARS", "JTK", "LS
         r(f"""meta2d('{filename}',timepoints='{timepoints}',filestyle = '{filestyle}',cycMethod = c("ARS", "JTK", "LS"),outdir='Out/{filename.split('/')[-1][:-4]}/metaout')""")
         print('Meta2d Done :)')
 
-def cosinorpy(filename,sep=',',folder_in='', n_components = 2, period = 24,folder=None, **kwargs):
+def cosinorpy(filename,sep=',',folder_in='', n_components = [1,2,3], period = 24,folder=None, **kwargs):
         """ 
         Perform Cosinor analysis and store the result in the cosinorpyout folder
         ...
@@ -167,7 +167,8 @@ def cosinorpy(filename,sep=',',folder_in='', n_components = 2, period = 24,folde
             print(df)
         else:
             df=file_parser.read_csv(filename,sep)
-        os.makedirs(f'Out/{filename[:-4]}/cosinorpyout', exist_ok=True)
+        filename=filename.split("/")[-1][:-4]
+        os.makedirs(f'Out/{filename}/cosinorpyout', exist_ok=True)
         df['test'] = df['test'].astype(str)
         df_results = pd.DataFrame(columns = ['test', 'period', 'n_components', 'p', 'q', 'p_reject', 'q_reject', 'RSS', 'R2', 'R2_adj', 'log-likelihood', 'amplitude', 'acrophase', 'mesor', 'peaks', 'heights', 'troughs', 'heights2'], dtype=float)
         if type(period) == int:
@@ -191,57 +192,69 @@ def cosinorpy(filename,sep=',',folder_in='', n_components = 2, period = 24,folde
                     except:
                         R2, R2_adj = np.nan, np.nan
                     #TODO append change
-
-                    """df_results= pd.concat([df_results,pd.DataFrame.from_dict({'test': test, 
-                                            'period': per,
-                                            'n_components': n_comps,
-                                            'p': statistics['p'], 
-                                            'p_reject': statistics['p_reject'],
-                                            'RSS': statistics['RSS'],
-                                            'R2': R2, 
-                                            'R2_adj': R2_adj,
-                                            'ME': statistics['ME'],
-                                            'resid_SE': statistics['resid_SE'],
-                                            'log-likelihood': results.llf,        
-                                            'amplitude': rhythm_param['amplitude'],
-                                            'acrophase': rhythm_param['acrophase'],
-                                            'mesor': rhythm_param['mesor'],
-                                            'peaks': rhythm_param['peaks'],
-                                            'heights': rhythm_param['heights'],
-                                            'troughs': rhythm_param['troughs'],
-                                            'heights2': rhythm_param['heights2']
-                                            })])"""
-
-
-                    df_results = df_results.append({'test': test, 
-                                            'period': per,
-                                            'n_components': n_comps,
-                                            'p': statistics['p'], 
-                                            'p_reject': statistics['p_reject'],
-                                            'RSS': statistics['RSS'],
-                                            'R2': R2, 
-                                            'R2_adj': R2_adj,
-                                            'ME': statistics['ME'],
-                                            'resid_SE': statistics['resid_SE'],
-                                            'log-likelihood': results.llf,        
-                                            'amplitude': rhythm_param['amplitude'],
-                                            'acrophase': rhythm_param['acrophase'],
-                                            'mesor': rhythm_param['mesor'],
-                                            'peaks': rhythm_param['peaks'],
-                                            'heights': rhythm_param['heights'],
-                                            'troughs': rhythm_param['troughs'],
-                                            'heights2': rhythm_param['heights2']
-                                            
-                                            }, ignore_index=True)
+                    df_dict=pd.DataFrame({'test': [test],
+                                            'period': [per],
+                                            'n_components': [n_comps],
+                                            'p': [statistics['p']], 
+                                            'p_reject': [statistics['p_reject']],
+                                            'RSS': [statistics['RSS']],
+                                            'R2': [R2], 
+                                            'R2_adj': [R2_adj],
+                                            'ME': [statistics['ME']],
+                                            'resid_SE': [statistics['resid_SE']],
+                                            'log-likelihood': [results.llf],        
+                                            'amplitude':[ rhythm_param['amplitude']],
+                                            'acrophase': [rhythm_param['acrophase']],
+                                            'mesor': [rhythm_param['mesor']],
+                                            'peaks': [rhythm_param['peaks']],
+                                            'heights':[ rhythm_param['heights']],
+                                            'troughs': [rhythm_param['troughs']],
+                                            'heights2':[ rhythm_param['heights2']]
+                                            })
+                    df_results= pd.concat([df_results,df_dict],ignore_index=True)
                     if n_comps == 0:
                         break        
         df_results.q = multi.multipletests(df_results.p, method = 'fdr_bh')[1]
         df_results.q_reject = multi.multipletests(df_results.p_reject, method = 'fdr_bh')[1]  
-        df_best_fits = cosinor.get_best_fits(df_results,criterium='RSS', reverse = False)
-        df_best_fits.to_csv(f"Out/{filename.split('/')[-1][:-4]}/cosinorpyout/COSINORresult_{filename.split('/')[-1][:-4]}.csv", index=False)   
+        df_best_models = cosinor.get_best_fits(df_results,criterium='RSS', reverse = False)
+        df_results_extended = cosinor.analyse_best_models(df, df_best_models, analysis="bootstrap")
+        df_results_extended.to_csv(f"Out/{filename}/cosinorpyout/COSINORresult_{filename}.csv", index=False)   
         print('Cosinor Done :)') 
-        return df_results
+        return df_results_extended
+
     
+def cosinor1py(filename,sep=',', period = 24,folder=None):
+        """ 
+        Perform Cosinor analysis and store the result in the cosinorpyout folder
+        ...
+
+        Parameters
+        ----------
+        filename : str
+            name of the input file (with path)
+        sep : str
+            separator of the file
+        n_components : int
+            number of components in each models
+        period : int
+            period of the analysed data
+        folder : str
+            folder to store Plot if wanted
+        """
+        if(filename[-4:]=='xlsx'):
+            df=file_parser.read_excel(filename)
+            print(df)
+        else:
+            df=file_parser.read_csv(filename,sep)
+        filename=filename.split("/")[-1][:-4]
+        os.makedirs(f'Out/{filename}/cosinorpyout', exist_ok=True)
+        df['test'] = df['test'].astype(str)
+        df_results = cosinor1.fit_group(df,period=period, plot_on=False)
+        df_results.to_csv(f"Out/{filename}/cosinorpyout/COSINOR1result_{filename}.csv", index=False)   
+        print('Cosinor1 Done :)') 
+        return df_results
+
+
 def cosinorpy_pop(filename,sep,period):
         """  
         Perform Cosinor analysis on population data and store the result in the cosinorpyout folder
@@ -256,12 +269,11 @@ def cosinorpy_pop(filename,sep,period):
         period : int
             period of the analysed data
         """
-        os.makedirs(f'Out/{filename[:-4]}/cosinorpyout', exist_ok=True)
+        os.makedirs(f'Out/{filename.split("/")[-1][:-4]}/cosinorpyout', exist_ok=True)
         df=file_parser.read_csv(filename,sep)
-        os.makedirs('cosinorpyout', exist_ok=True)
         df_results = cosinor.population_fit_group(df,period=period,folder='cosinorpyout')
         df_best_fits = cosinor.get_best_fits(df_results,criterium='RSS', reverse = False)
-        df_best_fits.to_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINORPopresult_{filename}", index=False)
+        df_best_fits.to_csv(f"Out/{filename.split('/')[-1][:-4]}/cosinorpyout/COSINORPopresult_{filename.split('/')[-1][:-4]}", index=False)
     
 def rain(filename,sample_rate=1,n_replicate=1,period=24):
         """  
@@ -279,7 +291,7 @@ def rain(filename,sample_rate=1,n_replicate=1,period=24):
         period : int
             period of the analysed data
         """
-        os.makedirs(f'Out/{filename[:-4]}/rainout', exist_ok=True)
+        os.makedirs(f'Out/{filename.split("/")[-1][:-4]}/rainout', exist_ok=True)
         r = robjects.r
         r['library']('rain')
         r(f"""data <- read.csv("{filename}", row.names = 1)
@@ -288,8 +300,8 @@ def rain(filename,sample_rate=1,n_replicate=1,period=24):
             period <- {period}
             res <- rain(t(data), deltat = sampleRate, 
                 nr.series = nbReplicate, period = period, verbose = TRUE)
-            dir.create("Out/{filename[:-4]}/rainout", showWarnings = FALSE)
-            write.csv(res, "Out/{filename[:-4]}/rainout/RAINresult_{filename}")""")
+            dir.create("Out/{filename.split('/')[-1][:-4]}/rainout", showWarnings = FALSE)
+            write.csv(res, "Out/{filename.split('/')[-1][:-4]}/rainout/RAINresult_{filename.split('/')[-1][:-4]}.csv")""")
         print('RAIN Done :)')
 
 def periodogram(df):
@@ -361,7 +373,7 @@ def plot_meta2d(filename,pvalue_plot=False,amplitude_plot=False,period_plot=Fals
             fig5 = ff.create_table(dff[phase])
             fig5.show()
 
-def pv_to_file(filename):
+def pv_load(filename):
         """  
         Find all models results and save them in one file
         ...
@@ -371,6 +383,7 @@ def pv_to_file(filename):
         filename : str
             name of the analyzed file 
         """
+        filename=filename.split("/")[-1]
         pv=pd.DataFrame()
         try:
             mout = pd.read_csv(f'Out/{filename[:-4]}/metaout/meta2d_{filename}')
@@ -381,15 +394,21 @@ def pv_to_file(filename):
                     pvalue.append(colnames[i])
             pv=mout[pvalue]
         except:
-            print('no meta2out of this file')
+            print('no metaout of this file')
         try:
             cout=pd.read_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename}")
             pv['Cosinor_pvalue']=cout['p']
         except:
             print('no Cosinorout of this file')
         try:
+            cout=pd.read_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINOR1result_{filename}")
+            pv['Cosinor1_pvalue']=cout['p']
+            pv['Cosinor1(amp)_pvalue']=cout['p(amplitude)']
+        except:
+            print('no Cosinor1out of this file')
+        try:
             rout=pd.read_csv(f"Out/{filename[:-4]}/rainout/RAINresult_{filename}")
-            pv["Rain_pvalue"]=rout["pVal"]
+            pv["Rain_pvalue"]=rout['pVal']
         except:
             print('no Rainout of this file')
         pv.to_csv(f"Out/{filename[:-4]}/pv_{filename[:-4]}.csv",index=False)
@@ -409,41 +428,92 @@ def pv_dist(filename):
         pv=pd.DataFrame()
         filename=filename.split("/")[-1]
         os.makedirs(f'Out/{filename[:-4]}/dist', exist_ok=True)
-        try:
-            mout = pd.read_csv(f'Out/{filename[:-4]}/metaout/meta2d_{filename}')
-            colnames=mout.columns.to_list()
-            pvalue=['CycID']
-            for i in range(len(colnames)):
-                if colnames[i][-2]=='u':
-                    pvalue.append(colnames[i])
-            pv=mout[pvalue]
-        except:
-            print('no meta2out of this file')
-        try:
-            cout=pd.read_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename}")
-            pv['Cosinor_pvalue']=cout['p']
-        except:
-            print('no Cosinorout of this file')
-        try:
-            rout=pd.read_csv(f"Out/{filename[:-4]}/rainout/RAINresult_{filename}")
-            pv["Rain_pvalue"]=rout["pVal"]
-        except:
-            print('no Rainout of this file')
-        pv.to_csv(f"Out/{filename[:-4]}/pv_{filename[:-4]}.csv",index=False)
-        #fig1 = ff.create_table(pv)
-        #fig1.show()
+        pv=pd.read_csv(f"Out/{filename[:-4]}/pv_{filename[:-4]}.csv")
         for i in pv.columns[1:]:
             plt.hist(pv[i])
             plt.ylabel('count')
             plt.title(i)
-            plt.savefig(f'Out/{filename[:-4]}/dist/dist_{i}_{filename[:-4]}.png',facecolor='white')
+            plt.savefig(f'Out/{filename[:-4]}/dist/pv_dist_{i}_{filename[:-4]}.png',facecolor='white')
             #plt.show()
             plt.clf()
             print(i,': ok')
         print('pValue Done :)') 
         return pv
+
+def qv_load(filename):
+        """  
+        Find all models results and save them in one file
+        ...
+
+        Parameters
+        ----------
+        filename : str
+            name of the analyzed file 
+        """
+        filename=filename.split("/")[-1]
+        qv=pd.DataFrame()
+        try:
+            mout = pd.read_csv(f'Out/{filename[:-4]}/metaout/meta2d_{filename}')
+            colnames=mout.columns.to_list()
+            qv['CycID']=mout['CycID']
+            qvalue=[]
+            for i in range(len(colnames)):
+                if colnames[i][-2]=='u':
+                    qvalue.append(colnames[i])
+            for col in qvalue:
+                Qs = multi.multipletests(mout[qvalue][col], method = 'fdr_bh')[1]
+                qv[f"{col.split('_')[0]}_qvalue"]=Qs
+        except:
+            print('no metaout of this file')
+        try:
+            cout=pd.read_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename}")
+            qv['Cosinor_qvalue']=cout['q']
+        except:
+            print('no Cosinorout of this file')
+        try:
+            cout=pd.read_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINOR1result_{filename}")
+            qv['Cosinor1_qvalue']=cout['q']
+            qv['Cosinor1(amp)_qvalue']=cout['q(amplitude)']
+        except:
+            print('no Cosinor1out of this file')
+        try:
+            rout=pd.read_csv(f"Out/{filename[:-4]}/rainout/RAINresult_{filename}")
+            Qs = multi.multipletests(rout['pVal'], method = 'fdr_bh')[1]
+            qv["Rain_qvalue"]=Qs
+        except:
+            print('no Rainout of this file')
+        qv.to_csv(f"Out/{filename[:-4]}/qv_{filename[:-4]}.csv",index=False)
+        return qv
+
+
+
+def qv_dist(filename):
+        """  
+        Plot and save in images folder pvalues distributions
+        ...
+
+        Parameters
+        ----------
+        filename : str
+            name of the analyzed file
+
+        """
+        qv=pd.DataFrame()
+        filename=filename.split("/")[-1]
+        os.makedirs(f'Out/{filename[:-4]}/dist', exist_ok=True)
+        qv=pd.read_csv(f"Out/{filename[:-4]}/qv_{filename[:-4]}.csv")
+        for i in qv.columns[1:]:
+            plt.hist(qv[i])
+            plt.ylabel('count')
+            plt.title(i)
+            plt.savefig(f'Out/{filename[:-4]}/dist/qv_dist_{i}_{filename[:-4]}.png',facecolor='white')
+            #plt.show()
+            plt.clf()
+            print(i,': ok')
+        print('pValue Done :)') 
+        return qv
     
-def venn(filename):
+def pv_venn(filename):
         """  
         Plot and save in images folder venn diagram
         ...
@@ -456,27 +526,7 @@ def venn(filename):
         pv=pd.DataFrame()
         filename=filename.split("/")[-1]
         os.makedirs(f'Out/{filename[:-4]}/venn', exist_ok=True)
-        try:
-            mout = pd.read_csv(f'Out/{filename[:-4]}/metaout/meta2d_{filename}')
-            colnames=mout.columns.to_list()
-            pvalue=['CycID']
-            for i in range(len(colnames)):
-                if colnames[i][-2]=='u':
-                    pvalue.append(colnames[i])
-            pv=mout[pvalue]
-        except:
-            print('no meta2out of this file')
-        try:
-            cout=pd.read_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename}")
-            pv['Cosinor_pvalue']=cout['p']
-        except:
-            print('no Cosinorout of this file')
-        try:
-            rout=pd.read_csv(f"Out/{filename[:-4]}/rainout/RAINresult_{filename}")
-            pv["Rain_pvalue"]=rout["pVal"]
-        except:
-            print('no Rainout of this file')
-        pv.to_csv(f"Out/{filename[:-4]}/pv_{filename[:-4]}.csv", index=False)
+        pv=pd.read_csv(f"Out/{filename[:-4]}/pv_{filename[:-4]}.csv")
         for col in range(1,len(pv.columns)):
             for coll in range(col,len(pv.columns)):
                 l1=0
@@ -493,6 +543,38 @@ def venn(filename):
                     print('no venn')
         print('venn Done :)') 
         return pv
+
+
+def qv_venn(filename):
+        """  
+        Plot and save in images folder venn diagram
+        ...
+
+        Parameters
+        ----------
+        filename : str
+            name of the analyzed file
+        """
+        qv=pd.DataFrame()
+        filename=filename.split("/")[-1]
+        os.makedirs(f'Out/{filename[:-4]}/venn', exist_ok=True)
+        qv=pd.read_csv(f"Out/{filename[:-4]}/qv_{filename[:-4]}.csv", )
+        for col in range(1,len(qv.columns)):
+            for coll in range(col,len(qv.columns)):
+                l1=0
+                for val in range(len(qv.values)):
+                    if qv.iloc[[val], [col]].to_numpy()[0]<0.05 and qv.iloc[[val], [coll]].to_numpy()[0]<0.05:
+                        l1+=1
+                l2=qv[qv.iloc[:, [col]]<0.05].count()[col]
+                l3=qv[qv.iloc[:, [coll]]<0.05].count()[coll]
+                if ((l1>0) or (l2>0) or (l3>0)) and (col!=coll):
+                    venn2(subsets = (l2-l1,l3-l1,l1), set_labels = (qv.columns[col], qv.columns[coll]))
+                    plt.savefig(f'Out/{filename[:-4]}/venn/venn_{qv.columns[col]}_{qv.columns[coll]}_{filename[:-4]}.png',facecolor='white')
+                    plt.clf()
+                else: 
+                    print('no venn')
+        print('venn Done :)') 
+        return qv
 
 def synt_rhythmic_data(filename,half_rnd=False,n_test=1,n_components=1,noise=0.5,replicates=1):
         """  
@@ -592,7 +674,7 @@ def synt_random_data(filename,n_test=1,replicates=1):
         #file_parser.export_csv(df,f"Out/{filename[:-4]}/{filename[:-4]}.csv")
         return df_new
 
-def make_metrics(filename,y=None,half_rnd=False,conf_matrix=True):
+def make_metrics(filename,y=None,half_rnd=False,conf_matrix=True,pvalue=True,qvalue=False):
         """  
         Make metrics of an analyzed file
         ...
@@ -606,80 +688,72 @@ def make_metrics(filename,y=None,half_rnd=False,conf_matrix=True):
         half_rnd : bool
             set y first half to 1 and the other to 0
         """
+        filename=filename.split("/")[-1]
+        vals=[]
+        if(qvalue==True):
+            vals.append('qv')
+        if(pvalue==True):    
+            vals.append('pv')
         pv=pd.DataFrame()
-        try:
-            mout = pd.read_csv(f'Out/{filename[:-4]}/metaout/meta2d_{filename}',sep=',')
-            colnames=mout.columns.to_list()
-            pvalue=['CycID']
-            for i in range(len(colnames)):
-                if colnames[i][-2]=='u':
-                    pvalue.append(colnames[i])
-            pv=mout[pvalue]
-        except:
-            print('no meta2out of this file')
-        try:
-            cout=pd.read_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename}")
-            pv['Cosinor_pvalue']=cout['p']
-        except:
-            print('no Cosinorout of this file')
-        try:
-            rout=pd.read_csv(f"Out/{filename[:-4]}/rainout/RAINresult_{filename}")
-            pv["Rain_pvalue"]=rout["pVal"]
-        except:
-            print('no Rainout of this file')
-        pv = pv.dropna()
-        print(pv.iloc[:,1:])
-        transformer = Binarizer(threshold=0.05).fit_transform(pv.iloc[:,1:])
-        label = pv.iloc[:,[0]]
-        x =pd.DataFrame(transformer, columns=pv.columns[1:]).applymap(lambda x: 1 if x==0 else 0)
-        if(half_rnd==True):
-            y = pd.DataFrame([1] * (len(x)//2), columns=['y'])
-            y = pd.concat([y,pd.DataFrame([0] * (len(x)//2), columns=['y'])],ignore_index=True)
-        pv['y'] = y
-        pv.to_csv(f"Out/{filename[:-4]}/pv_{filename[:-4]}.csv",index=False)
-        df_results = pd.DataFrame(columns = ['auc','precision','recall','f1','accuracy','model'], dtype=float)
-        for col in x :
-            try:
-                if conf_matrix==True:
-                    os.makedirs(f'Out/{filename[:-4]}/confusion_matrix', exist_ok=True)
-                    cm = confusion_matrix(y,x[col])
-                    group_names = ['True Neg','False Pos','False Neg','True Pos']
-                    group_counts = ['{0:0.0f}'.format(value) for value in cm.flatten()]
-                    group_percentages = ['{0:.2%}'.format(value) for value in cm.flatten()/np.sum(cm)]
-                    labels = [f'{v1}\n{v2}\n{v3}' for v1, v2, v3 in zip(group_names,group_counts,group_percentages)]
-                    labels = np.asarray(labels).reshape(2,2)
-                    #plt.figure(figsize=(10, 10))
+        for val in vals:
+            if(val=='qv'):
+                pv = qv_load(filename)
+            elif(val=='pv'):    
+                pv = pv_load(filename)
+            pv = pv.dropna()
+            #print(pv.iloc[:,1:])
+            transformer = Binarizer(threshold=0.05).fit_transform(pv.iloc[:,1:])
+            label = pv.iloc[:,[0]]
+            x =pd.DataFrame(transformer, columns=pv.columns[1:]).applymap(lambda x: 1 if x==0 else 0)
 
-                    sns.heatmap(cm, annot=labels, fmt='',cmap='Blues')
-                    plt.suptitle(f'Metrics {col.split("_")[0]}  {filename[:-4]}',fontsize =20)
-                    plt.savefig(f"Out/{filename[:-4]}/confusion_matrix/{filename[:-4]}_{col.split('_')[0]}_confusion_matrix.png", bbox_inches="tight", facecolor='white')
-                    plt.show()
-                print(col, ' accuracy:', accuracy_score(y,x[col]), ' precision:', precision_score(y,x[col]), ' recall:', recall_score(y,x[col]), ' f1:',f1_score(y,x[col]), ' auc:', roc_auc_score(y,x[col]),'mcc:',matthews_corrcoef(y,x[col]))
-                df_results = df_results.append({'auc': roc_auc_score(y,x[col]), 
-                                                'precision': precision_score(y,x[col]),
-                                                'recall': recall_score(y,x[col]),
-                                                'f1': f1_score(y,x[col]), 
-                                                'accuracy': accuracy_score(y,x[col]),
-                                                'model': col.split('_')[0],
-                                                'mcc': matthews_corrcoef(y,x[col])
-                                                }, ignore_index=True)
-            except:
-                print(col, ' accuracy:', accuracy_score(y,x[col]), ' precision:', precision_score(y,x[col]), ' recall:', recall_score(y,x[col]), ' f1:',f1_score(y,x[col]), ' auc:', 0)
-                tn, fp, fn, tp = confusion_matrix(y,x[col]).ravel()
-                df_results = df_results.append({'auc': 0, 
-                                                'precision': precision_score(y,x[col]),
-                                                'recall': recall_score(y,x[col]),
-                                                'f1': f1_score(y,x[col]), 
-                                                'accuracy': accuracy_score(y,x[col]),
-                                                'model': col.split('_')[0],
-                                                'mcc': matthews_corrcoef(y,x[col])
-                                                }, ignore_index=True)
-                
-        print('metrics Done :)') 
-        df_results.to_csv(f"Out/{filename[:-4]}/metrics_{filename[:-4]}.csv",index=False)
-        return df_results
+            if(half_rnd==True):
+                y = pd.DataFrame([1] * (len(x)//2), columns=['y'])
+                y = pd.concat([y,pd.DataFrame([0] * (len(x)//2), columns=['y'])],ignore_index=True)
+            pv['y'] = y
+            df_results = pd.DataFrame(columns = ['auc','precision','recall','f1','accuracy','model'], dtype=float)
+            for col in x :
+                try:
+                    if conf_matrix==True:
+                        os.makedirs(f'Out/{filename[:-4]}/confusion_matrix', exist_ok=True)
+                        cm = confusion_matrix(y,x[col])
+                        group_names = ['True Neg','False Pos','False Neg','True Pos']
+                        group_counts = ['{0:0.0f}'.format(value) for value in cm.flatten()]
+                        group_percentages = ['{0:.2%}'.format(value) for value in cm.flatten()/np.sum(cm)]
+                        labels = [f'{v1}\n{v2}\n{v3}' for v1, v2, v3 in zip(group_names,group_counts,group_percentages)]
+                        labels = np.asarray(labels).reshape(2,2)
+                        #plt.figure(figsize=(10, 10))
+                        sns.heatmap(cm, annot=labels, fmt='',cmap='Blues')
+                        plt.suptitle(f'{val} Metrics {col.split("_")[0]}  {filename[:-4]}',fontsize =20)
+                        plt.savefig(f"Out/{filename[:-4]}/confusion_matrix/{val}_{filename[:-4]}_{col.split('_')[0]}_confusion_matrix.png", bbox_inches="tight", facecolor='white')
+                        plt.show()
+                    #print(col, ' accuracy:', accuracy_score(y,x[col]), ' precision:', precision_score(y,x[col]), ' recall:', recall_score(y,x[col]), ' f1:',f1_score(y,x[col]), ' auc:', roc_auc_score(y,x[col]),'mcc:',matthews_corrcoef(y,x[col]))
+                    df_results= pd.concat([df_results,pd.DataFrame({'auc': [roc_auc_score(y,x[col])], 
+                                                    'precision': [precision_score(y,x[col])],
+                                                    'recall': [recall_score(y,x[col])],
+                                                    'f1': [f1_score(y,x[col])], 
+                                                    'accuracy': [accuracy_score(y,x[col])],
+                                                    'model': [col.split('_')[0]],
+                                                    'mcc': [matthews_corrcoef(y,x[col])]
+                                                    })],ignore_index=True)
+                except:
+                    df_results= pd.concat([df_results,pd.DataFrame({'auc': [0], 
+                                                    'precision': [precision_score(y,x[col])],
+                                                    'recall': [recall_score(y,x[col])],
+                                                    'f1': [f1_score(y,x[col])], 
+                                                    'accuracy': [accuracy_score(y,x[col])],
+                                                    'model': [col.split('_')[0]],
+                                                    'mcc': [matthews_corrcoef(y,x[col])]
+                                                    })],ignore_index=True)
+            if(val=='qv'):
+                df_results.to_csv(f"Out/{filename[:-4]}/qv_metrics_{filename[:-4]}.csv",index=False)
+            elif(val=='pv'):    
+                df_results.to_csv(f"Out/{filename[:-4]}/pv_metrics_{filename[:-4]}.csv",index=False)
+        print('metrics Done :)')
+        return pv
 
-def plot_metrics(filename):
+
+
+def plot_metrics(filename,pvalue=True,qvalue=False):
         """  
         Plot metrics comparaison of ARS,JTK,LS,Meta2d,Cosinor,Rain
         ...
@@ -689,25 +763,39 @@ def plot_metrics(filename):
         filename : str
             name of the analyzed file
         """
-        df_metrics = pd.read_csv(f"Out/{filename[:-4]}/metrics_{filename[:-4]}.csv")
-        ncols = 2
-        nrows = 3
-        sns.set_style("white")
-        flatui = ['#d9d9d9','#bdbdbd','#969696','#737373','#525252','#252525']
-        fig, axes = plt.subplots(ncols = ncols, nrows = nrows, sharey=False)
-        axes = axes.flatten()         
-        fig.set_size_inches(10, 10)
-        metrics = ["precision", "f1", "recall", "accuracy", "auc","mcc"]
-        for ax, metric in zip(axes, metrics):
-            #sns.barplot(data=df_after_ind, x='model', y=metric, ax=ax, ci=95) # ci=95 --> 95% confidence interval
-            sns.barplot(data=df_metrics, x='model', y=metric, ax=ax, ci=68,palette=flatui) # ci=68 --> standard error!
-            ax.set_ylabel(metric)
-        plt.suptitle(f'Metrics  {filename[:-4]}')
-        fig.subplots_adjust(top=0.95)
-        plt.savefig(f"Out/{filename[:-4]}/{filename[:-4]}_metrics.png", bbox_inches="tight", facecolor='white')
-        plt.show()
+        filename=filename.split("/")[-1]
+        vals=[]
+        if(qvalue==True):
+            vals.append('qv')
+        if(pvalue==True):    
+            vals.append('pv')
+        for val in vals:
+            if(val=='qv'):
+                df_metrics = pd.read_csv(f"Out/{filename[:-4]}/qv_metrics_{filename[:-4]}.csv")
+            elif(val=='pv'):    
+                df_metrics = pd.read_csv(f"Out/{filename[:-4]}/pv_metrics_{filename[:-4]}.csv")
+            ncols = 2
+            nrows = 3
+            sns.set_style("white")
+            flatui = ['#d9d9d9','#bdbdbd','#969696','#737373','#525252','#252525']
+            fig, axes = plt.subplots(ncols = ncols, nrows = nrows, sharey=False)
+            axes = axes.flatten()         
+            fig.set_size_inches(10, 10)
+            metrics = ["precision", "f1", "recall", "accuracy", "auc","mcc"]
+            for ax, metric in zip(axes, metrics):
+                #sns.barplot(data=df_after_ind, x='model', y=metric, ax=ax, ci=95) # ci=95 --> 95% confidence interval
+                sns.barplot(data=df_metrics, x='model', y=metric, ax=ax, ci=68,palette=flatui) # ci=68 --> standard error!
+                ax.set_ylabel(metric)
+            plt.suptitle(f'Metrics  {filename[:-4]}')
+            fig.subplots_adjust(top=0.95)
+            if(val=='qv'):
+                plt.savefig(f"Out/{filename[:-4]}/{filename[:-4]}_qv_metrics.png", bbox_inches="tight", facecolor='white')
+                plt.show()
+            elif(val=='pv'):    
+                plt.savefig(f"Out/{filename[:-4]}/{filename[:-4]}_pv_metrics.png", bbox_inches="tight", facecolor='white')
+                plt.show()
 
-def file_rda(filename,path='',filestyle='csv',metrics=False,half_rnd=True,n_components=1,replicates=1,sample_rate=2,period=24,y=None):
+def file_rda(filename,filestyle='csv',metrics=False,half_rnd=True,n_components=1,replicates=1,sample_rate=2,period=24,y=None,pvalue=True,qvalue=True):
         """  
         Perform meta2d,ARS,JTK,LS,Rain,Cosinor, make pv distribution, venn diagram and can plot metrics
         ...
@@ -729,18 +817,22 @@ def file_rda(filename,path='',filestyle='csv',metrics=False,half_rnd=True,n_comp
         sample_rate : int
             the rate of the sample collection, interval between two sample
         """
-        if(path!=''):
-            file=f"{path}/{filename}"
-        else:
-            file=filename
-        meta2d(file,filestyle)
-        rain(file,sample_rate=sample_rate,n_replicate=replicates,period=period)
-        cosinorpy(file,n_components=n_components)
-        pv_dist(filename)
-        venn(filename)
+        print(filename)
+        meta2d(filename,filestyle)
+        rain(filename,sample_rate=sample_rate,n_replicate=replicates,period=period)
+        cosinorpy(filename)
+        cosinor1py(filename)
+        if(pvalue==True):
+            pv_load(filename)
+            pv_dist(filename)
+            pv_venn(filename)
+        if(qvalue==True):
+            qv_load(filename)
+            qv_dist(filename)
+            qv_venn(filename)
         if(metrics==True):
-            make_metrics(filename,y,half_rnd)
-            plot_metrics(filename)
+            make_metrics(filename,y,half_rnd,pvalue=pvalue,qvalue=qvalue)
+            plot_metrics(filename,pvalue=pvalue,qvalue=qvalue)
 
 def cosinor_read(filename,sep='\t'):
     filestyle = filename[-4:]
