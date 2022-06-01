@@ -859,3 +859,29 @@ def plot_data(df,filename=None):
         if(filename!=None):
             plt.savefig(f"{filename}_{name}.png",facecolor='white')
         plt.show()
+
+def cosinor_peaks(df,filename):
+    names = df.test.unique()
+    print(names)
+    path=f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename[:-4]}.csv"
+    df_peaks=pd.read_csv(path)
+    for name in names:
+        dff=df[df['test']==name]
+        df_peak=df_peaks[df_peaks['test']==name]
+        x_peak= str(df_peak['peaks'].iloc[0]).strip('][').split(' ')
+        y_peak=str(df_peak['heights'].iloc[0]).strip('][').split(' ')
+        while("" in x_peak) :
+            x_peak.remove("")
+        while("" in y_peak) :
+            y_peak.remove("")
+        print(x_peak)
+        x_peak= [float(x) for x in x_peak]
+        print(y_peak)
+        y_peak= [float(y) for y in y_peak]
+        fig, ax = plt.subplots()
+        sns.lineplot(data=dff,x='x',y='y',hue='test',ax=ax)
+        ax.plot(x_peak,y_peak,'or')
+        print(x_peak,y_peak)
+        if(filename!=None):
+            plt.savefig(f"{filename}_{name}.png",facecolor='white')
+        plt.show()
