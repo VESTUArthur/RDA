@@ -218,6 +218,8 @@ def cosinorpy(filename,sep=',',folder_in='', n_components = [1,2,3], period = 24
         df_results.q_reject = multi.multipletests(df_results.p_reject, method = 'fdr_bh')[1]  
         df_best_models = cosinor.get_best_fits(df_results,criterium='RSS', reverse = False)
         df_results_extended = cosinor.analyse_best_models(df, df_best_models, analysis="bootstrap")
+        df_results_extended['peaks']=df_results['peaks']
+        df_results_extended['heights']=df_results['heights']
         df_results_extended.to_csv(f"Out/{filename}/cosinorpyout/COSINORresult_{filename}.csv", index=False)   
         print('Cosinor Done :)') 
         return df_results_extended
