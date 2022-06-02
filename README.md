@@ -29,7 +29,20 @@ pip install sklearn
 ```
 To finish, don't forget to install R if it's not already installed : https://cran.r-project.org/bin/windows/base/ 
 ...and MetaCycle : https://github.com/gangwug/MetaCycle
+```R
+# install 'devtools' in R(>3.0.2)
+install.packages("devtools")
+# install MetaCycle
+devtools::install_github('gangwug/MetaCycle')
+```
+
 ...and Rain too : https://www.bioconductor.org/packages/release/bioc/html/rain.html
+```R
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("rain")
+```
 
 ## Functions
 
