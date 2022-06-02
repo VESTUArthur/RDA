@@ -1,3 +1,4 @@
+from jsonschema import validate
 import numpy as np
 import pandas as pd
 import plotly.figure_factory as ff
@@ -119,6 +120,7 @@ def meta2d_format(filename,sep=','):
         x.extend(newnames)
         df1.columns=x
         df1.to_csv(f"Out/{filename[:-4]}/{filename[:-4]}.csv", index=False)
+        return df1
 
 
 def meta2d(filename,filestyle='csv',timepoints='line1',models=("ARS", "JTK", "LS")):
@@ -788,7 +790,7 @@ def plot_metrics(filename,pvalue=True,qvalue=False):
                 #sns.barplot(data=df_after_ind, x='model', y=metric, ax=ax, ci=95) # ci=95 --> 95% confidence interval
                 sns.barplot(data=df_metrics, x='model', y=metric, ax=ax, ci=68,palette=flatui) # ci=68 --> standard error!
                 ax.set_ylabel(metric)
-            plt.suptitle(f'Metrics  {filename[:-4]}')
+            plt.suptitle(f'{val} Metrics  {filename[:-4]}')
             fig.subplots_adjust(top=0.95)
             if(val=='qv'):
                 plt.savefig(f"Out/{filename[:-4]}/{filename[:-4]}_qv_metrics.png", bbox_inches="tight", facecolor='white')
