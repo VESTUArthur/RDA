@@ -1,10 +1,10 @@
-from jsonschema import validate
+
 import numpy as np
 import pandas as pd
 import plotly.figure_factory as ff
 import os
 import rpy2.robjects as robjects
-from rpy2.robjects import pandas2ri
+
 from CosinorPy import file_parser, cosinor, cosinor1
 import random
 import re
@@ -799,7 +799,7 @@ def plot_metrics(filename,pvalue=True,qvalue=False):
                 plt.savefig(f"Out/{filename[:-4]}/{filename[:-4]}_pv_metrics.png", bbox_inches="tight", facecolor='white')
                 plt.show()
 
-def file_rda(filename,filestyle='csv',metrics=False,half_rnd=True,n_components=1,replicates=1,sample_rate=2,period=24,y=None,pvalue=True,qvalue=True):
+def file_rda(filename,filestyle='csv',metrics=False,half_rnd=True,n_components=3,replicates=1,sample_rate=2,period=24,y=None,pvalue=True,qvalue=True):
         """  
         Perform meta2d,ARS,JTK,LS,Rain,Cosinor, make pv distribution, venn diagram and can plot metrics
         ...
@@ -824,7 +824,7 @@ def file_rda(filename,filestyle='csv',metrics=False,half_rnd=True,n_components=1
         print(filename)
         meta2d(filename,filestyle)
         rain(filename,sample_rate=sample_rate,n_replicate=replicates,period=period)
-        cosinorpy(filename)
+        cosinorpy(filename,n_components=n_components)
         cosinor1py(filename)
         if(pvalue==True):
             pv_load(filename)
