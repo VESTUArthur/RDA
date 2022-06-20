@@ -4,7 +4,6 @@ import pandas as pd
 import plotly.figure_factory as ff
 import os
 import rpy2.robjects as robjects
-
 from CosinorPy import file_parser, cosinor, cosinor1
 import random
 import re
@@ -21,6 +20,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import matthews_corrcoef
+from pyboat import WAnalyzer
 
 def cycMouseLiverRNA(filename) :
         """  
@@ -406,8 +406,8 @@ def pv_load(filename):
             print('no Cosinorout of this file')
         try:
             cout=pd.read_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINOR1result_{filename}")
-            pv['Cosinor1_pvalue']=cout['p']
-            pv['Cosinor1(amp)_pvalue']=cout['p(amplitude)']
+            pv['Cosinor1_pvalue']=cout['p(amplitude)']
+            pv['Cosinor1(p)_pvalue']=cout['p']
         except:
             print('no Cosinor1out of this file')
         try:
@@ -476,8 +476,8 @@ def qv_load(filename):
             print('no Cosinorout of this file')
         try:
             cout=pd.read_csv(f"Out/{filename[:-4]}/cosinorpyout/COSINOR1result_{filename}")
-            qv['Cosinor1_qvalue']=cout['q']
-            qv['Cosinor1(amp)_qvalue']=cout['q(amplitude)']
+            qv['Cosinor1_qvalue']=cout['q(amplitude)']
+            qv['Cosinor1(q)_qvalue']=cout['q']
         except:
             print('no Cosinor1out of this file')
         try:
@@ -629,7 +629,8 @@ def synt_rhythmic_data(filename,half_rnd=False,n_test=1,n_components=1,noise=0.5
             df_rhd_res=df_rhd_res.iloc[half:,]
             print('---------ok-----------')
             print(df_rhd_res)
-            df_rnd_res.columns=random.sample(list(df_int_col.to_numpy().astype(int).flatten()), len(df_int_col.to_numpy().flatten()))  
+            #df_rnd_res.columns=random.sample(list(df_int_col.to_numpy().astype(int).flatten()), len(df_int_col.to_numpy().flatten()))
+            df_rnd_res.columns=random.sample(list(df_int_col.to_numpy().astype(int).flatten()), len(df_int_col.to_numpy().flatten()))   
             df_rnd_res = df_rnd_res.sort_index(axis=1)
             print(df_rnd_res.columns) 
             df_results=pd.concat([df_rhd_res,df_rnd_res],ignore_index=True)
@@ -678,7 +679,7 @@ def synt_random_data(filename,n_test=1,replicates=1):
         #file_parser.export_csv(df,f"Out/{filename[:-4]}/{filename[:-4]}.csv")
         return df_new
 
-def make_metrics(filename,y=None,half_rnd=False,conf_matrix=True,pvalue=True,qvalue=False):
+def make_metrics(filename,y=None,half_rnd=False,conf_matrix=True,pvalue=False,qvalue=True):
         """  
         Make metrics of an analyzed file
         ...
@@ -714,7 +715,7 @@ def make_metrics(filename,y=None,half_rnd=False,conf_matrix=True,pvalue=True,qva
                 y = pd.DataFrame([1] * (len(x)//2), columns=['y'])
                 y = pd.concat([y,pd.DataFrame([0] * (len(x)//2), columns=['y'])],ignore_index=True)
             pv['y'] = y
-            df_results = pd.DataFrame(columns = ['auc','precision','recall','f1','accuracy','model'], dtype=float)
+            df_results = pd.DataFrame(columns = ['auc','precision','recall','f1','accuracy','model','mcc'], dtype=float)
             for col in x :
                 try:
                     if conf_matrix==True:
@@ -757,7 +758,7 @@ def make_metrics(filename,y=None,half_rnd=False,conf_matrix=True,pvalue=True,qva
 
 
 
-def plot_metrics(filename,pvalue=True,qvalue=False):
+def plot_metrics(filename,qvalue=True,pvalue=False):
         """  
         Plot metrics comparaison of ARS,JTK,LS,Meta2d,Cosinor,Rain
         ...
@@ -799,7 +800,7 @@ def plot_metrics(filename,pvalue=True,qvalue=False):
                 plt.savefig(f"Out/{filename[:-4]}/{filename[:-4]}_pv_metrics.png", bbox_inches="tight", facecolor='white')
                 plt.show()
 
-def file_rda(filename,filestyle='csv',metrics=False,half_rnd=True,n_components=3,replicates=1,sample_rate=2,period=24,y=None,pvalue=True,qvalue=True):
+def file_rda(filename,filestyle='csv',metrics=False,half_rnd=True,n_components=3,replicates=1,sample_rate=2,period=24,y=None,pvalue=False,qvalue=True):
         """  
         Perform meta2d,ARS,JTK,LS,Rain,Cosinor, make pv distribution, venn diagram and can plot metrics
         ...
@@ -887,3 +888,33 @@ def cosinor_peaks(df,filename):
         if(filename!=None):
             plt.savefig(f"{filename}_{name}.png",facecolor='white')
         plt.show()
+
+def analysis(df,filename,lines='all',dt=None,time_unit_label='hours',T_cutoff = None):
+        filename=filename.split('/')[-1][:-4]
+        print(filename)
+        ridge=pd.DataFrame()
+        if lines == 'all':
+            lines = range(len(df))
+        if type(lines) == int:
+            lines = [lines]  
+        print(lines)
+        if dt==None:
+            dt = int(df.columns[1]) - int(df.columns[0])
+        print(dt)
+        if T_cutoff == None:
+            T_cutoff = int(2*df.columns[-1])
+        print('T_cutoff',int(2*df.columns[-1]))
+        for x in lines:
+                print(f'line: {x}')
+                signal = df.iloc[x][1:].interpolate(method ='linear', limit_direction ='forward').to_list()
+                t = df.columns[1:].astype(int).to_list()
+                periods = t
+                wAn= WAnalyzer(periods=periods,dt=dt, time_unit_label=time_unit_label)
+                plt.ion()
+                modulus, ransform = wAn.compute_spectrum(signal,T_c=T_cutoff)
+                ridge_tmp = wAn.get_maxRidge()
+                ridge_tmp['line'] = x
+                ridge = pd.concat([ridge,ridge_tmp])
+                plt.savefig(f"Out/{filename}/plt_line{x}_{filename}.png",facecolor='white')
+        ridge.to_csv(f"Out/{filename}/ridge_{filename}.csv")
+        return ridge
