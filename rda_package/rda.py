@@ -897,18 +897,19 @@ def analysis(df,filename,lines='all',dt=None,time_unit_label='hours',T_cutoff = 
             lines = range(len(df))
         if type(lines) == int:
             lines = [lines]  
-        print(lines)
+        print("lines:",lines)
         if dt==None:
             dt = int(df.columns[1]) - int(df.columns[0])
-        print(dt)
+        print("dt",dt)
         if T_cutoff == None:
             T_cutoff = int(2*df.columns[-1])
-        print('T_cutoff',int(2*df.columns[-1]))
+        print('T_cutoff:',int(2*df.columns[-1]))
         for x in lines:
                 print(f'line: {x}')
                 signal = df.iloc[x][1:].interpolate(method ='linear', limit_direction ='forward').to_list()
                 t = df.columns[1:].astype(int).to_list()
                 periods = t
+                print('periods:',periods)
                 wAn= WAnalyzer(periods=periods,dt=dt, time_unit_label=time_unit_label)
                 plt.ion()
                 modulus, ransform = wAn.compute_spectrum(signal,T_c=T_cutoff)
