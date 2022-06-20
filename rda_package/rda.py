@@ -915,6 +915,7 @@ def analysis(df,filename,lines='all',dt=None,time_unit_label='hours',T_cutoff = 
                 ridge_tmp = wAn.get_maxRidge()
                 ridge_tmp['line'] = x
                 ridge = pd.concat([ridge,ridge_tmp])
-                plt.savefig(f"Out/{filename}/plt_line{x}_{filename}.png",facecolor='white')
-        ridge.to_csv(f"Out/{filename}/ridge_{filename}.csv")
+                os.makedirs(f'Out/{filename}/analysis', exist_ok=True)
+                plt.savefig(f"Out/{filename}/analysis/plt_line{x}_{filename}.png",facecolor='white')
+        ridge.to_csv(f"Out/{filename}/analysis/ridge_{filename}.csv")
         return ridge
