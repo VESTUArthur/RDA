@@ -692,6 +692,12 @@ def make_metrics(filename,y=None,half_rnd=False,conf_matrix=True,pvalue=False,qv
             target
         half_rnd : bool
             set y first half to 1 and the other to 0
+        conf_matrix : bool
+            plot confusion matrix and save them in Out/filename/confusion_matrix/
+        pvalue : bool
+            make metrics using pvalues and save them in Out/filename/
+        qvalue : bool
+            make metrics using qvalues and save them in Out/filename/
         """
         filename=filename.split("/")[-1]
         vals=[]
@@ -760,13 +766,17 @@ def make_metrics(filename,y=None,half_rnd=False,conf_matrix=True,pvalue=False,qv
 
 def plot_metrics(filename,qvalue=True,pvalue=False):
         """  
-        Plot metrics comparaison of ARS,JTK,LS,Meta2d,Cosinor,Rain
+        Plot metrics comparaison of ARS,JTK,LS,Meta2d,Cosinor,Rain and save them in Out/filename/
         ...
 
         Parameters
         ----------
         filename : str
             name of the analyzed file
+        qvalue : bool
+            plot metrics using qvalues and save them in Out/filename/
+        pvalue : bool
+            plot metrics using qvalues and save them in Out/filename/
         """
         filename=filename.split("/")[-1]
         vals=[]
@@ -802,13 +812,15 @@ def plot_metrics(filename,qvalue=True,pvalue=False):
 
 def file_rda(filename,filestyle='csv',metrics=False,half_rnd=True,n_components=3,replicates=1,sample_rate=2,period=24,y=None,pvalue=False,qvalue=True):
         """  
-        Perform meta2d,ARS,JTK,LS,Rain,Cosinor, make pv distribution, venn diagram and can plot metrics
+        Perform meta2d,ARS,JTK,LS,Rain,Cosinor, make pv distribution, venn diagram and can plot metrics and save them in Out/filename/
         ...
 
         Parameters
         ----------
         filename : str
             name (with path) of the analyzed file
+        filestyle : str
+            type of file, csv or txt
         metrics : bool
             if true make metric
         y : list
@@ -821,6 +833,13 @@ def file_rda(filename,filestyle='csv',metrics=False,half_rnd=True,n_components=3
             number of replicate in the dataset
         sample_rate : int
             the rate of the sample collection, interval between two sample
+        period : int
+            period of the signal
+        qvalue : bool
+            make and plot metrics using qvalues and save them in Out/filename/
+        pvalue : bool
+            make and plot metrics using qvalues and save them in Out/filename/
+
         """
         print(filename)
         meta2d(filename,filestyle)
@@ -840,21 +859,54 @@ def file_rda(filename,filestyle='csv',metrics=False,half_rnd=True,n_components=3
             plot_metrics(filename,pvalue=pvalue,qvalue=qvalue)
 
 def cosinor_read(filename,sep='\t'):
-    filestyle = filename[-4:]
-    if(filestyle=='xlsx'):
-        df = file_parser.read_excel(filename)
-    else:
-        df = file_parser.read_csv(filename,sep)
-    return df
+        """  
+        Read file in cosinor format, xlsx, csv or txt
+        ...
+
+        Parameters
+        ----------
+        filename : str
+            name of the input file
+        sep : str
+            separator of the file
+        """
+        filestyle = filename[-4:]
+        if(filestyle=='xlsx'):
+            df = file_parser.read_excel(filename)
+        else:
+            df = file_parser.read_csv(filename,sep)
+        return df
 
 def export_csv(df,filename):
-    filestyle = filename[-4:]
-    if(filestyle=='xlsx'):
-        file_parser.export_csv(df,f'{filename[:-4]}csv')
-    else:
-       file_parser.export_csv(df,filename)
+        """  
+        Write a dataframe in a csv in cosinor format
+        ...
+
+        Parameters
+        ----------
+        filename : str
+            saved file name
+        df : DataFrame
+            dataframe to save in cosinor format
+        """
+        filestyle = filename[-4:]
+        if(filestyle=='xlsx'):
+            file_parser.export_csv(df,f'{filename[:-4]}csv')
+        else:
+        file_parser.export_csv(df,filename)
 
 def plot_data(df,filename=None):
+        """  
+        Plot file or dataframe data
+        ...
+
+        Parameters
+        ----------
+        filename : str
+            input file name
+        df : DataFrame
+            input dataframe
+        """
     names = df.test.unique()
     for name in names:
         dff=df[df['test']==name]
@@ -864,6 +916,17 @@ def plot_data(df,filename=None):
         plt.show()
 
 def cosinor_peaks(df,filename):
+        """  
+        Plot peaks of an analysed file
+        ...
+
+        Parameters
+        ----------
+        filename : str
+            input file name
+        df : DataFrame
+            intput dataframe
+        """
     names = df.test.unique()
     print(names)
     path=f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename[:-4]}.csv"
@@ -890,6 +953,24 @@ def cosinor_peaks(df,filename):
         plt.show()
 
 def analysis(df,filename,lines='all',dt=None,time_unit_label='hours',T_cutoff = None):
+        """  
+        pyBOAT signal analysis
+        ...
+
+        Parameters
+        ----------
+        filename : str
+            input file name
+        df : DataFrame
+            input dataframe
+        lines : str or list or int
+        dt : int
+            delta time
+        time_unit_label : str
+            time unit in minutes or hours
+        T_cutoff : int
+            filter cut off
+        """
         filename=filename.split('/')[-1][:-4]
         print(filename)
         ridge=pd.DataFrame()
