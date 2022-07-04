@@ -123,7 +123,7 @@ def meta2d_format(filename,sep=','):
         return df1
 
 
-def meta2d(filename,filestyle='csv',timepoints='line1',models=("ARS", "JTK", "LS")):
+def meta2d(filename,filestyle='csv',timepoints='line1',models=["ARS", "JTK", "LS"]):
         """  
         Perform meta2d analysis (JTK,ARS,LS) and store the result in the metaout folder
         ...
@@ -143,7 +143,7 @@ def meta2d(filename,filestyle='csv',timepoints='line1',models=("ARS", "JTK", "LS
         print(filename.split('/')[-1][:-4])
         r = robjects.r
         r['library']('MetaCycle')
-        r(f"""meta2d('{filename}',timepoints='{timepoints}',filestyle = '{filestyle}',cycMethod = c("ARS", "JTK", "LS"),outdir='Out/{filename.split('/')[-1][:-4]}/metaout')""")
+        r(f"""meta2d('{filename}',timepoints='{timepoints}',filestyle = '{filestyle}',cycMethod = c({str(models)[1:-1]}),outdir='Out/{filename.split('/')[-1][:-4]}/metaout')""")
         print('Meta2d Done :)')
 
 def cosinorpy(filename,sep=',',folder_in='', n_components = [1,2,3], period = 24,folder=None, **kwargs):
@@ -893,7 +893,7 @@ def export_csv(df,filename):
         if(filestyle=='xlsx'):
             file_parser.export_csv(df,f'{filename[:-4]}csv')
         else:
-        file_parser.export_csv(df,filename)
+            file_parser.export_csv(df,filename)
 
 def plot_data(df,filename=None):
         """  
@@ -907,13 +907,13 @@ def plot_data(df,filename=None):
         df : DataFrame
             input dataframe
         """
-    names = df.test.unique()
-    for name in names:
-        dff=df[df['test']==name]
-        sns.lineplot(data=dff,x='x',y='y',hue='test')
-        if(filename!=None):
-            plt.savefig(f"{filename}_{name}.png",facecolor='white')
-        plt.show()
+        names = df.test.unique()
+        for name in names:
+            dff=df[df['test']==name]
+            sns.lineplot(data=dff,x='x',y='y',hue='test')
+            if(filename!=None):
+                plt.savefig(f"{filename}_{name}.png",facecolor='white')
+            plt.show()
 
 def cosinor_peaks(df,filename):
         """  
@@ -927,30 +927,30 @@ def cosinor_peaks(df,filename):
         df : DataFrame
             intput dataframe
         """
-    names = df.test.unique()
-    print(names)
-    path=f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename[:-4]}.csv"
-    df_peaks=pd.read_csv(path)
-    for name in names:
-        dff=df[df['test']==name]
-        df_peak=df_peaks[df_peaks['test']==name]
-        x_peak= str(df_peak['peaks'].iloc[0]).strip('][').split(' ')
-        y_peak=str(df_peak['heights'].iloc[0]).strip('][').split(' ')
-        while("" in x_peak) :
-            x_peak.remove("")
-        while("" in y_peak) :
-            y_peak.remove("")
-        print(x_peak)
-        x_peak= [float(x) for x in x_peak]
-        print(y_peak)
-        y_peak= [float(y) for y in y_peak]
-        fig, ax = plt.subplots()
-        sns.lineplot(data=dff,x='x',y='y',hue='test',ax=ax)
-        ax.plot(x_peak,y_peak,'or')
-        print(x_peak,y_peak)
-        if(filename!=None):
-            plt.savefig(f"{filename}_{name}.png",facecolor='white')
-        plt.show()
+        names = df.test.unique()
+        print(names)
+        path=f"Out/{filename[:-4]}/cosinorpyout/COSINORresult_{filename[:-4]}.csv"
+        df_peaks=pd.read_csv(path)
+        for name in names:
+            dff=df[df['test']==name]
+            df_peak=df_peaks[df_peaks['test']==name]
+            x_peak= str(df_peak['peaks'].iloc[0]).strip('][').split(' ')
+            y_peak=str(df_peak['heights'].iloc[0]).strip('][').split(' ')
+            while("" in x_peak) :
+                x_peak.remove("")
+            while("" in y_peak) :
+                y_peak.remove("")
+            print(x_peak)
+            x_peak= [float(x) for x in x_peak]
+            print(y_peak)
+            y_peak= [float(y) for y in y_peak]
+            fig, ax = plt.subplots()
+            sns.lineplot(data=dff,x='x',y='y',hue='test',ax=ax)
+            ax.plot(x_peak,y_peak,'or')
+            print(x_peak,y_peak)
+            if(filename!=None):
+                plt.savefig(f"{filename}_{name}.png",facecolor='white')
+            plt.show()
 
 def analysis(df,filename,lines='all',dt=None,time_unit_label='hours',T_cutoff = None):
         """  
@@ -978,25 +978,26 @@ def analysis(df,filename,lines='all',dt=None,time_unit_label='hours',T_cutoff = 
             lines = range(len(df))
         if type(lines) == int:
             lines = [lines]  
-        print("lines:",lines)
+        #print("lines:",lines)
         if dt==None:
             dt = int(df.columns[1]) - int(df.columns[0])
-        print("dt",dt)
+        #print("dt",dt)
         if T_cutoff == None:
             T_cutoff = int(2*df.columns[-1])
-        print('T_cutoff:',int(2*df.columns[-1]))
+        #print('T_cutoff:',int(2*df.columns[-1]))
         for x in lines:
-                print(f'line: {x}')
+                #print(f'line: {x}')
                 signal = df.iloc[x][1:].interpolate(method ='linear', limit_direction ='forward').to_list()
                 t = df.columns[1:].astype(int).to_list()
                 periods = t
-                print('periods:',periods)
+                #print('periods:',periods)
                 wAn= WAnalyzer(periods=periods,dt=dt, time_unit_label=time_unit_label)
                 plt.ion()
+                plt.suptitle(f'pyBOAT line{x} {filename}')
                 modulus, ransform = wAn.compute_spectrum(signal,T_c=T_cutoff)
                 ridge_tmp = wAn.get_maxRidge()
                 ridge_tmp['line'] = x
-                ridge = pd.concat([ridge,ridge_tmp])
+                ridge = pd.concat([ridge,ridge_tmp.groupby(['line']).mean().drop('time',axis=1)])
                 os.makedirs(f'Out/{filename}/analysis', exist_ok=True)
                 plt.savefig(f"Out/{filename}/analysis/plt_line{x}_{filename}.png",facecolor='white')
         ridge.to_csv(f"Out/{filename}/analysis/ridge_{filename}.csv")
