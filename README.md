@@ -47,64 +47,82 @@ BiocManager::install("rain")
 ## Functions
 
 `cycMouseLiverRNA(filename)`:
-    Save MetaCycle dataset cycMouseLiverRNA
+    Save MetaCycle dataset cycMouseLiverRNA.
     
 ``cycMouseLiverProtein(filename):``
-    Save MetaCycle dataset cycMouseLiverProtein
+    Save MetaCycle dataset cycMouseLiverProtein.
     
 ``menetRNASeqMouseLiver(filename):``
-    Save RAIN dataset menetRNASeqMouseLiver
+    Save RAIN dataset menetRNASeqMouseLiver.
     
 ``meta2d_format(filename,sep=','):``
-    Try format a given file to be usable with meta2d
-
-``meta_JTK(filename,filestyle='csv',timepoints='line1')``
-    Perform JTK analysis thanks to metacycle and store the result in the metaout folder
-
-``meta_ARS(filename,filestyle='csv',timepoints='line1')``
-    Perform ARS analysis thanks to metacycle and store the result in the metaout folder
-
-``meta_LS(filename,filestyle='csv',timepoints='line1')``
-    Perform LS analysis thanks to metacycle and store the result in the metaout folder
+    Try format a given file to be usable with meta2d.
     
-``meta2d(filename,filestyle='csv',timepoints='line1'):``
-    Perform meta2d analysis (JTK,LS and if no replicates ARS) and store the result in the metaout folder
+``meta2d(filename,filestyle='csv',timepoints='line1',models=["ARS", "JTK", "LS"]):``
+    Perform meta2d analysis (JTK, LS and/or, if no replicates, ARS) and store the result in the metaout folder.
 
-``cosinorpy(filename,sep=',', n_components = 2, period = 24, names = "",folder=None, **kwargs):``
-    Perform Cosinor analysis and store the result in the cosinorpyout folder
+``cosinorpy(filename,sep=',', n_components = [1,2,3], period = 24, folder=None, **kwargs):``
+    Perform Cosinor analysis and store the result in the cosinorpyout folder.
+
+``cosinor1py(filename,sep=',', period = 24,folder=None):``
+    Perform 1 component Cosinor analysis and store the result in the cosinorpyout folder.
 
 ``cosinor_pop(filename,sep,period):``
-    Perform Cosinor analysis for population data and store the result in the cosinorpyout folder
+    Perform Cosinor analysis for population data and store the result in the cosinorpyout folder.
 
 ``rain(filename,sample_rate=1,n_replicate=1,period=24):``
-    Perform RAIN analysis and store the result in the rainout folder
+    Perform RAIN analysis and store the result in the rainout folder.
     
 ``periodogram(df):``
-    Plot the periodogram of a given dataset in cosinor format
+    Plot the periodogram of a given dataset in cosinor format.
 
 ``plot_meta2d(filename,pvalue_plot=False,amplitude_plot=False,period_plot=False,qvalue_plot=False,phase_plot=False):``
-    Plot meta2d result in downloadable graphic table
+    Plot meta2d result in downloadable graphic table.
 
-``pv_to_file(filename):``
-    Find all models results and save them in one file
+``pv_load(filename):``
+    Find all models p-values and save them in one file.
 
 ``pv_dist(filename):``
-    Plot and save in images folder pvalues distributions
+    Plot and save in images folder p-values distributions.
+
+``pv_venn(filename):``
+    Plot and save in images folder venn diagram using p-values.
+
+``qv_load(filename):``
+    Find all models q-values and save them in one file.
+
+``qv_dist(filename):``
+    Plot and save in images folder q-values distributions.
    
-``venn(filename):``
-    Plot and save in images folder venn diagram
+``qv_venn(filename):``
+    Plot and save in images folder venn diagram using q-values.
 
 ``synt_rhythmic_data(filename,half_rnd=False,n_test=1,n_components=1,noise=0.5,replicates=1):``
-    Create test data  (rhythmic)
+    Create test data.  (rhythmic)
 
 ``synt_random_data(filename,n_test=1,replicates=1):``
-    Create random test data  (non-rhythmic)
+    Create random test data.  (non-rhythmic)
 
-``make_metrics(filename,y=None,half_rnd=False):``
-    Make metrics of an analyzed file
+``make_metrics(filename,y=None,half_rnd=False,conf_matrix=True,pvalue=False,qvalue=True):``
+    Make metrics of an analyzed file.
 
-``plot_metrics(filename):``
-    Plot metrics comparaison of ARS,JTK,LS,Meta2d,Cosinor,Rain
+``plot_metrics(filename,qvalue=True,pvalue=False):``
+    Plot metrics comparaison of ARS,JTK,LS,Meta2d,Cosinor,Rain.
 
-``file_rda(filename,metrics=False,half_rnd=True,n_components=1,replicates=1,sample_rate=2,y=None):``
-    Perform meta2d,ARS,JTK,LS,Rain,Cosinor, make pv distribution, venn diagram and can plot metrics
+``file_rda(filename,filestyle='csv',metrics=False,half_rnd=True,n_components=3,replicates=1,sample_rate=2,period=24,y=None,pvalue=False,qvalue=True):``
+    Perform meta2d,ARS,JTK,LS,Rain,Cosinor, make pv distribution, venn diagram and can plot metrics.
+
+``cosinor_read(filename,sep='\t'):``
+    Read file in cosinor format, xlsx, csv or txt.
+
+``export_csv(df,filename):``
+    Write a dataframe in a csv in cosinor format.
+
+``plot_data(df,filename=None):``
+    Plot file or dataframe data.
+
+``cosinor_peaks(df,filename):``
+    Plot cosinor peaks of an analysed file
+
+``analysis(df,filename,lines='all',dt=None,time_unit_label='hours',T_cutoff = None):``
+    pyBOAT signal analysis

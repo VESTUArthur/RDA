@@ -146,7 +146,7 @@ def meta2d(filename,filestyle='csv',timepoints='line1',models=["ARS", "JTK", "LS
         r(f"""meta2d('{filename}',timepoints='{timepoints}',filestyle = '{filestyle}',cycMethod = c({str(models)[1:-1]}),outdir='Out/{filename.split('/')[-1][:-4]}/metaout')""")
         print('Meta2d Done :)')
 
-def cosinorpy(filename,sep=',',folder_in='', n_components = [1,2,3], period = 24,folder=None, **kwargs):
+def cosinorpy(filename,sep=',',n_components = [1,2,3], period = 24,folder=None, **kwargs):
         """ 
         Perform Cosinor analysis and store the result in the cosinorpyout folder
         ...
@@ -322,7 +322,7 @@ def periodogram(df):
 
 def plot_meta2d(filename,pvalue_plot=False,amplitude_plot=False,period_plot=False,qvalue_plot=False,phase_plot=False):
         """  
-        Plot the periodogram of a given dataset in cosinor format
+        Plot meta2d result in downloadable graphic table
         ...
 
         Parameters
@@ -444,6 +444,37 @@ def pv_dist(filename):
         print('pValue Done :)') 
         return pv
 
+def pv_venn(filename):
+        """  
+        Plot and save in images folder venn diagram
+        ...
+
+        Parameters
+        ----------
+        filename : str
+            name of the analyzed file
+        """
+        pv=pd.DataFrame()
+        filename=filename.split("/")[-1]
+        os.makedirs(f'Out/{filename[:-4]}/venn', exist_ok=True)
+        pv=pd.read_csv(f"Out/{filename[:-4]}/pv_{filename[:-4]}.csv")
+        for col in range(1,len(pv.columns)):
+            for coll in range(col,len(pv.columns)):
+                l1=0
+                for val in range(len(pv.values)):
+                    if pv.iloc[[val], [col]].to_numpy()[0]<0.05 and pv.iloc[[val], [coll]].to_numpy()[0]<0.05:
+                        l1+=1
+                l2=pv[pv.iloc[:, [col]]<0.05].count()[col]
+                l3=pv[pv.iloc[:, [coll]]<0.05].count()[coll]
+                if ((l1>0) or (l2>0) or (l3>0)) and (col!=coll):
+                    venn2(subsets = (l2-l1,l3-l1,l1), set_labels = (pv.columns[col], pv.columns[coll]))
+                    plt.savefig(f'Out/{filename[:-4]}/venn/venn_{pv.columns[col]}_{pv.columns[coll]}_{filename[:-4]}.png',facecolor='white')
+                    plt.clf()
+                else: 
+                    print('no venn')
+        print('venn Done :)') 
+        return pv
+
 def qv_load(filename):
         """  
         Find all models results and save them in one file
@@ -516,37 +547,6 @@ def qv_dist(filename):
             print(i,': ok')
         print('pValue Done :)') 
         return qv
-    
-def pv_venn(filename):
-        """  
-        Plot and save in images folder venn diagram
-        ...
-
-        Parameters
-        ----------
-        filename : str
-            name of the analyzed file
-        """
-        pv=pd.DataFrame()
-        filename=filename.split("/")[-1]
-        os.makedirs(f'Out/{filename[:-4]}/venn', exist_ok=True)
-        pv=pd.read_csv(f"Out/{filename[:-4]}/pv_{filename[:-4]}.csv")
-        for col in range(1,len(pv.columns)):
-            for coll in range(col,len(pv.columns)):
-                l1=0
-                for val in range(len(pv.values)):
-                    if pv.iloc[[val], [col]].to_numpy()[0]<0.05 and pv.iloc[[val], [coll]].to_numpy()[0]<0.05:
-                        l1+=1
-                l2=pv[pv.iloc[:, [col]]<0.05].count()[col]
-                l3=pv[pv.iloc[:, [coll]]<0.05].count()[coll]
-                if ((l1>0) or (l2>0) or (l3>0)) and (col!=coll):
-                    venn2(subsets = (l2-l1,l3-l1,l1), set_labels = (pv.columns[col], pv.columns[coll]))
-                    plt.savefig(f'Out/{filename[:-4]}/venn/venn_{pv.columns[col]}_{pv.columns[coll]}_{filename[:-4]}.png',facecolor='white')
-                    plt.clf()
-                else: 
-                    print('no venn')
-        print('venn Done :)') 
-        return pv
 
 
 def qv_venn(filename):
@@ -860,7 +860,7 @@ def file_rda(filename,filestyle='csv',metrics=False,half_rnd=True,n_components=3
 
 def cosinor_read(filename,sep='\t'):
         """  
-        Read file in cosinor format, xlsx, csv or txt
+        Read file in cosinor format, xlsx, csv or txt.
         ...
 
         Parameters
@@ -879,7 +879,7 @@ def cosinor_read(filename,sep='\t'):
 
 def export_csv(df,filename):
         """  
-        Write a dataframe in a csv in cosinor format
+        Write a dataframe in a csv in cosinor format.
         ...
 
         Parameters
@@ -897,7 +897,7 @@ def export_csv(df,filename):
 
 def plot_data(df,filename=None):
         """  
-        Plot file or dataframe data
+        Plot file or dataframe data.
         ...
 
         Parameters
@@ -917,7 +917,7 @@ def plot_data(df,filename=None):
 
 def cosinor_peaks(df,filename):
         """  
-        Plot peaks of an analysed file
+        Plot cosinor peaks of an analysed file.
         ...
 
         Parameters
