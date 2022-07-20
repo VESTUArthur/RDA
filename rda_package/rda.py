@@ -1018,17 +1018,18 @@ def plot_detrend(x,y,deg=[1,2,3,5]):
         deg : list or int
             ploynomial curve degree
         """
-    if type(deg)!=list:
-        deg=[deg]
-    for deg_val in deg:
-        model= np.polyfit(x,y,deg_val)
-        predicted = np.polyval(model, x)
-        yp=y - predicted
-        plt.plot(x, y,'r')
-        plt.plot(x, predicted,'b')
-        plt.plot(x, yp,'g')
-        plt.title(f'Detrended Residual deg={deg_val}')
-        plt.show()
+        if type(deg)!=list:
+            deg=[deg]
+        for deg_val in deg:
+            model= np.polyfit(x,y,deg_val)
+            predicted = np.polyval(model, x)
+            yp=y - predicted
+            plt.plot(x, y,'r')
+            plt.plot(x, predicted,'b')
+            plt.plot(x, yp,'g')
+            plt.title(f'Detrended Residual deg={deg_val}')
+            plt.show()
+
 def detrend(x,y,deg):  
         """  
         Detrend data.
@@ -1043,8 +1044,8 @@ def detrend(x,y,deg):
         deg : int
             ploynomial curve degree
         """
-    model= np.polyfit(x,y,deg)
-    predicted = np.polyval(model, x)
-    yp=y - predicted
-    print(f'Detrended Residual deg={deg}')
-    return yp
+        model= np.polyfit(x,y,deg)
+        predicted = np.polyval(model, x)
+        yp=y - predicted
+        print(f'Detrended Residual deg={deg}')
+        return yp
