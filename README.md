@@ -122,7 +122,13 @@ BiocManager::install("rain")
     Plot file or dataframe data.
 
 ``cosinor_peaks(df,filename):``
-    Plot cosinor peaks of an analysed file
+    Plot cosinor peaks of an analysed file.
 
 ``analysis(df,filename,lines='all',dt=None,time_unit_label='hours',T_cutoff = None):``
-    pyBOAT signal analysis
+    pyBOAT signal analysis.
+
+``plot_detrend(x,y,deg=[1,2,3,5]):``
+    Plot detrend ploynomial curve.
+
+``detrend(x,y,deg):`` 
+    Detrend data.

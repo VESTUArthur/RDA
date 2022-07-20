@@ -954,7 +954,7 @@ def cosinor_peaks(df,filename):
 
 def analysis(df,filename,lines='all',dt=None,time_unit_label='hours',T_cutoff = None):
         """  
-        pyBOAT signal analysis
+        pyBOAT signal analysis.
         ...
 
         Parameters
@@ -964,6 +964,7 @@ def analysis(df,filename,lines='all',dt=None,time_unit_label='hours',T_cutoff = 
         df : DataFrame
             input dataframe
         lines : str or list or int
+            number of lines analysed
         dt : int
             delta time
         time_unit_label : str
@@ -1002,3 +1003,48 @@ def analysis(df,filename,lines='all',dt=None,time_unit_label='hours',T_cutoff = 
                 plt.savefig(f"Out/{filename}/analysis/plt_line{x}_{filename}.png",facecolor='white')
         ridge.to_csv(f"Out/{filename}/analysis/ridge_{filename}.csv")
         return ridge
+
+def plot_detrend(x,y,deg=[1,2,3,5]):
+        """  
+        Plot detrend ploynomial curve.
+        ...
+
+        Parameters
+        ----------
+        x: list or series
+            time points
+        y : list or series
+            values
+        deg : list or int
+            ploynomial curve degree
+        """
+    if type(deg)!=list:
+        deg=[deg]
+    for deg_val in deg:
+        model= np.polyfit(x,y,deg_val)
+        predicted = np.polyval(model, x)
+        yp=y - predicted
+        plt.plot(x, y,'r')
+        plt.plot(x, predicted,'b')
+        plt.plot(x, yp,'g')
+        plt.title(f'Detrended Residual deg={deg_val}')
+        plt.show()
+def detrend(x,y,deg):  
+        """  
+        Detrend data.
+        ...
+
+        Parameters
+        ----------
+        x: list or series
+            time points
+        y : list or series
+            values
+        deg : int
+            ploynomial curve degree
+        """
+    model= np.polyfit(x,y,deg)
+    predicted = np.polyval(model, x)
+    yp=y - predicted
+    print(f'Detrended Residual deg={deg}')
+    return yp
