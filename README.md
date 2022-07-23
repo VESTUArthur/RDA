@@ -6,7 +6,7 @@ Include different functions that allow the user to perform rhythmic data analysi
 
  Can be installed with ``pip`` :
 ```python
-pip install -i https://test.pypi.org/simple/ rda-VESTUArthur
+pip install rda-package
 ```
 Then you can ``import`` the package with :
 ```python
