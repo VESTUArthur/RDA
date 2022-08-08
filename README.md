@@ -131,4 +131,4 @@ BiocManager::install("rain")
     Plot detrend ploynomial curve.
 
 ``detrend(x,y,deg):`` 
-    Detrend data.
+    Detrend data using polynomial curve of a given degree.
